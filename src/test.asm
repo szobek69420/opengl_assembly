@@ -17,6 +17,8 @@ section .bss use32
 	stdout resb 4			;HANDLE for the standard output 
 	
 	buffer resb 1000
+	
+	pwindow resb 4		;GLFWwindow*
 
 section .text use32
 
@@ -25,6 +27,8 @@ section .text use32
 	dll_import kernel32.dll, GetStdHandle
 	dll_import kernel32.dll, WriteFile
 	
+	dll_import kernel32.dll, ExitProcess
+	
 	dll_import glfw3.dll, glfwInit
 	dll_import glfw3.dll, glfwTerminate
 	
@@ -32,47 +36,55 @@ section .text use32
 	extern my_strcat
 	extern my_sprintf
 	
+	extern window_create
+	extern window_destroy
+	
 	..start:
 		push ebp
 		mov ebp, esp
 		
 		finit
 		
-		;push 0
-		;push messagebox_title
-		;push messagebox_text
-		;push 0
-		;call [MessageBoxA]
-		
 		call get_stdout_handle
 		
-		;call [glfwInit]
-		;cmp eax, 0
-		;je start_end
+		push sus
+		call window_create
+		mov dword[pwindow], eax
+		add esp, 4
+		
+		cmp dword[pwindow], 0
+		jne window_creation_successful
+			jmp start_end
+		window_creation_successful:
 		
 		
-		;call [glfwTerminate]
+		push dword[pwindow]
+		call window_destroy
+		add esp, 4
+		
 		
 		push mega
 		push dword[float_number]
 		push format
 		push buffer
-		call my_sprintf
+		;call my_sprintf
 		add esp, 16
 		
 		push sus
 		push buffer
-		call my_strcat
+		;call my_strcat
 		add esp, 8
 		
 		push buffer
-		call print_string
+		;call print_string
 		add esp, 4
 		
 		start_end:
 		mov esp, ebp
 		pop ebp
-		ret
+		
+		push 0
+		call [ExitProcess]
 		
 		
 	get_stdout_handle:		;void get_stdout_handle(void)
