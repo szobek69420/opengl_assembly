@@ -39,6 +39,8 @@ section .text use32
 	extern window_create
 	extern window_destroy
 	
+	extern game_loop
+	
 	..start:
 		push ebp
 		mov ebp, esp
@@ -56,6 +58,11 @@ section .text use32
 		jne window_creation_successful
 			jmp start_end
 		window_creation_successful:
+		
+		
+		push dword[pwindow]
+		call game_loop
+		add esp, 4
 		
 		
 		push dword[pwindow]

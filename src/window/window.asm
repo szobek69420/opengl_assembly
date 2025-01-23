@@ -10,6 +10,9 @@ GLFW_CONTEXT_VERSION_MINOR equ 0x00022003
 GLFW_OPENGL_PROFILE equ 0x00022008
 GLFW_OPENGL_CORE_PROFILE equ 0x00032001
 
+section .rodata use32
+	window_could_not_be_created db "window could not be created",10,0
+
 section .text use32
 	global window_create			;GLFWwindow* window_create(const char* name)
 	global window_destroy			;void window_destroy(GLFWwindow* pwindow)
@@ -21,6 +24,15 @@ section .text use32
 	
 	dll_import glfw3.dll, glfwCreateWindow
 	dll_import glfw3.dll, glfwDestroyWindow
+	
+	dll_import glfw3.dll, glfwMakeContextCurrent
+	
+	dll_import glfw3.dll, glfwSwapInterval
+	
+	dll_import glfw3.dll, glfwGetProcAddress
+	
+	extern load_gl_functions
+	extern glViewport
 	
 window_create:
 	push ebp
@@ -59,6 +71,41 @@ window_create:
 		pop ebp
 		ret
 	window_create_no_gebasz:
+	
+	;set the current context to this thread
+	push dword[ebp-4]
+	call [glfwMakeContextCurrent]
+	
+	;swap as fast as possible
+	push 0
+	call [glfwSwapInterval]
+	
+	;load the opengl functions
+	push dword[glfwGetProcAddress]
+	call load_gl_functions
+	add esp, 4
+	
+	test eax, eax
+	jne window_create_load_functions_no_gebasz
+		push dword[ebp-4]
+		call [glfwDestroyWindow]
+		
+		call [glfwTerminate]
+		mov eax, 0
+		
+		mov esp, ebp
+		pop ebp
+		ret
+	window_create_load_functions_no_gebasz:
+	
+	
+	;set the viewport size
+	push 420
+	push 420
+	push 0
+	push 0
+	call [glViewport]
+	
 	
 	mov eax, dword[ebp-4]
 	
