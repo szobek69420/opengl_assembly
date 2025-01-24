@@ -33,6 +33,7 @@ game_loop:
 	mov eax, dword[ebp+8]
 	mov dword[ebp-4], eax
 	
+	
 	;the actual game loop
 	game_loop_loop_start:
 	
@@ -58,7 +59,7 @@ game_loop:
 		push dword[ebp-4]
 		call [glfwWindowShouldClose]
 		test eax, eax
-		je game_loop_loop_start
+		jz game_loop_loop_start
 	
 	mov esp, ebp
 	pop ebp

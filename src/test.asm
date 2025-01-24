@@ -36,6 +36,8 @@ section .text use32
 	extern my_strcat
 	extern my_sprintf
 	
+	extern my_printf
+	
 	extern window_create
 	extern window_destroy
 	
@@ -47,7 +49,11 @@ section .text use32
 		
 		finit
 		
-		call get_stdout_handle
+		push mega
+		push dword[float_number]
+		push format
+		call my_printf
+		add esp, 4
 		
 		push sus
 		call window_create
@@ -69,22 +75,6 @@ section .text use32
 		call window_destroy
 		add esp, 4
 		
-		
-		push mega
-		push dword[float_number]
-		push format
-		push buffer
-		;call my_sprintf
-		add esp, 16
-		
-		push sus
-		push buffer
-		;call my_strcat
-		add esp, 8
-		
-		push buffer
-		;call print_string
-		add esp, 4
 		
 		start_end:
 		mov esp, ebp
