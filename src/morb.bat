@@ -1,3 +1,4 @@
+cls
 mkdir build
 nasm -fobj test.asm -o build/test.o
 nasm -fobj string/string.asm -o build/string.o
