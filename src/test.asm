@@ -9,6 +9,9 @@ section .rodata use32
 	sus db "sus",0
 	mega db "mega",0
 	
+	write_mode db "w",0
+	file_name db "sigma.gyatt",0
+	
 	format db "sugus %f %s",0
 	
 	float_number dd -69.42
@@ -17,6 +20,7 @@ section .bss use32
 	stdout resb 4			;HANDLE for the standard output 
 	
 	buffer resb 1000
+	file resb 4
 	
 	pwindow resb 4		;GLFWwindow*
 
@@ -38,6 +42,11 @@ section .text use32
 	
 	extern my_printf
 	
+	extern my_fopen
+	extern my_fclose
+	extern my_fgets
+	extern my_fprintf
+	
 	extern window_create
 	extern window_destroy
 	
@@ -49,11 +58,23 @@ section .text use32
 		
 		finit
 		
+		push write_mode
+		push file_name
+		call my_fopen
+		mov dword[file], eax
+		add esp, 8
+		
 		push mega
 		push dword[float_number]
 		push format
-		call my_printf
+		push dword[file]
+		call my_fprintf
+		add esp, 16
+		
+		push dword[file]
+		call my_fclose
 		add esp, 4
+		
 		
 		push sus
 		call window_create
