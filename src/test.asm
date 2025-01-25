@@ -50,6 +50,8 @@ section .text use32
 	extern window_create
 	extern window_destroy
 	
+	extern shader_import
+	
 	extern game_loop
 	
 	..start:
@@ -64,7 +66,7 @@ section .text use32
 		mov dword[file], eax
 		add esp, 8
 		
-		push mega
+		push sus
 		push dword[float_number]
 		push format
 		push dword[file]
@@ -74,6 +76,12 @@ section .text use32
 		push dword[file]
 		call my_fclose
 		add esp, 4
+		
+		push 0
+		push 0
+		push file_name
+		call shader_import
+		add esp, 12
 		
 		
 		push sus

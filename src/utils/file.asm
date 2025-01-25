@@ -108,7 +108,7 @@ my_fgets:
 	push ebp
 	mov ebp, esp
 	
-	sub esp, 4		;number of files read
+	sub esp, 4		;number of bytes read
 	
 	mov eax, dword[ebp+12]
 	cmp eax, 0
@@ -127,6 +127,9 @@ my_fgets:
 	test eax, eax
 	jz my_fgets_error		;ReadFile was unsuccessful
 	
+	;check if no characters were read
+	cmp dword[ebp-4], 0
+	je my_fgets_error
 	
 	;search for the '\n' or '\0'
 	mov eax, dword[ebp+8]		;current pos in buffer in eax
