@@ -12,6 +12,9 @@ section .rodata use32
 	write_mode db "w",0
 	file_name db "sigma.gyatt",0
 	
+	vertex_shader_file db "sigma.vag",0
+	fragment_shader_file db "sigma.fag",0
+	
 	format db "sugus %f %s",0
 	format2 db "%d",0
 	
@@ -75,8 +78,8 @@ section .text use32
 		
 		
 		push 0
-		push 0
-		push file_name
+		push fragment_shader_file
+		push vertex_shader_file
 		call shader_import
 		add esp, 12
 		

@@ -45,6 +45,8 @@ section .rodata use32
 	name_glDeleteProgram db "glDeleteProgram",0
 	name_glDeleteShader db "glDeleteShader",0
 	name_glGetError db "glGetError",0
+	name_glGetProgramInfoLog db "glGetProgramInfoLog",0
+	name_glGetProgramiv db "glGetProgramiv",0
 	name_glGetShaderInfoLog db "glGetShaderInfoLog",0
 	name_glGetShaderiv db "glGetShaderiv",0
 	name_glGetString db "glGetString",0
@@ -65,6 +67,8 @@ section .bss use32
 	glFunc glDeleteProgram
 	glFunc glDeleteShader
 	glFunc glGetError
+	glFunc glGetProgramInfoLog
+	glFunc glGetProgramiv
 	glFunc glGetShaderInfoLog
 	glFunc glGetShaderiv
 	glFunc glGetString
@@ -93,6 +97,8 @@ load_gl_functions:
 	load dword[ebp+8], glDeleteProgram
 	load dword[ebp+8], glDeleteShader
 	load dword[ebp+8], glGetError
+	load dword[ebp+8], glGetProgramInfoLog
+	load dword[ebp+8], glGetProgramiv
 	load dword[ebp+8], glGetShaderInfoLog
 	load dword[ebp+8], glGetShaderiv
 	load dword[ebp+8], glGetString

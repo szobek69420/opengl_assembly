@@ -1,11 +1,13 @@
 [BITS 32]
 
 section .rodata use32
+	print_int db "%d",10,0
 	read_mode db "r",0
 	
 	shader_import_error_1 db "shader_import: %s could not be opened",10,0
 	shader_import_error_2 db "shader_import: an error occured while compiling %s",10,0
 	shader_import_error_3 db "%s",10,0
+	shader_import_error_4 db "shader_import: linkin failed",10,0
 	
 section .bss use32
 	info_buffer resb 512
@@ -14,6 +16,7 @@ section .bss use32
 section .text use32
 	
 	global shader_import		;GLuint shader_import(const char* pathToVertexShader, const char* pathToFragmentShader, const char* nullablePathToGeometryShader)
+	global shader_destroy		;void shader_destroy(GLuint program)
 	
 	extern my_fopen
 	extern my_fclose
@@ -33,19 +36,28 @@ section .text use32
 	extern GL_GEOMETRY_SHADER
 	extern GL_FRAGMENT_SHADER
 	extern GL_COMPILE_STATUS
+	extern GL_LINK_STATUS
 	
+	extern glAttachShader
+	extern glLinkProgram
+	extern glCreateProgram
 	extern glCreateShader
 	extern glShaderSource
 	extern glCompileShader
 	extern glGetShaderiv
 	extern glGetShaderInfoLog
+	extern glGetProgramiv
+	extern glGetProgramInfoLog
+	extern glDeleteShader
+	extern glDeleteProgram
+	extern glGetError
 	
 shader_import:
 	push ebp
 	mov ebp, esp
 	
 	sub esp, 4		;program
-	sub esp, 4		;file
+	sub esp, 4		;unused
 	sub esp, 4		;char* shaderSource
 	
 	sub esp, 4		;vertex shader
@@ -126,6 +138,207 @@ shader_import:
 		
 	shader_import_vs_compiled:
 	
+	;import and compile the geometry shader
+	;only if there is one tho lol
+	mov dword[ebp-20], 0		;set the value of the geometry shader to 0 just in case
+	cmp dword[ebp+16], 0
+	je shader_import_no_geometry_shader
+	
+		push dword[ebp-12]
+		push dword[ebp+16]
+		call shader_import_read_file
+		add esp, 8
+		test eax, eax
+		jz shader_import_gs_read
+			;geometry shader file could not be opened
+			push dword[ebp+16]
+			push shader_import_error_1
+			push shader_buffer
+			call my_sprintf
+			call my_printf
+			
+			xor eax, eax
+			jmp shader_import_end
+			
+		shader_import_gs_read:
+		
+		
+		push dword[GL_GEOMETRY_SHADER]
+		call [glCreateShader]
+		mov dword[ebp-20], eax		;save geometry shader
+		
+		lea eax, [ebp-12]
+		push 0
+		push eax
+		push 1
+		push dword[ebp-20]
+		call [glShaderSource]
+		
+		push dword[ebp-20]
+		call [glCompileShader]
+		
+		lea eax, [ebp-28]
+		push eax
+		push dword[GL_COMPILE_STATUS]
+		push dword[ebp-20]
+		call [glGetShaderiv]
+		
+		cmp dword[ebp-28], 0
+		jne shader_import_gs_compiled
+			;an error occured while compiling the shader
+			push dword[ebp+16]
+			push shader_import_error_2
+			push shader_buffer
+			call my_sprintf
+			call my_printf
+			add esp, 12
+			
+			push shader_buffer
+			push 0
+			push 1000
+			push dword[ebp-16]
+			call [glGetShaderInfoLog]
+			
+			push shader_buffer
+			push shader_import_error_3
+			call my_printf
+			add esp, 8
+			
+			xor eax, eax
+			jmp shader_import_end
+		shader_import_gs_compiled:
+		
+	shader_import_no_geometry_shader:
+	
+	
+	;import and compile fragment shader
+	push dword[ebp-12]
+	push dword[ebp+12]
+	call shader_import_read_file
+	add esp, 8
+	test eax, eax
+	jz shader_import_fs_read
+		;fragment shader file could not be opened
+		push dword[ebp+12]
+		push shader_import_error_1
+		push shader_buffer
+		call my_sprintf
+		call my_printf
+		
+		xor eax, eax
+		jmp shader_import_end
+		
+	shader_import_fs_read:
+	
+	
+	push dword[GL_FRAGMENT_SHADER]
+	call [glCreateShader]
+	mov dword[ebp-24], eax		;save fragment shader
+	
+	lea eax, [ebp-12]
+	push 0
+	push eax
+	push 1
+	push dword[ebp-24]
+	call [glShaderSource]
+	
+	push dword[ebp-24]
+	call [glCompileShader]
+	
+	lea eax, [ebp-28]
+	push eax
+	push dword[GL_COMPILE_STATUS]
+	push dword[ebp-24]
+	call [glGetShaderiv]
+	
+	cmp dword[ebp-28], 0
+	jne shader_import_fs_compiled
+		;an error occured while compiling the shader
+		push dword[ebp+12]
+		push shader_import_error_2
+		push shader_buffer
+		call my_sprintf
+		call my_printf
+		add esp, 12
+		
+		push shader_buffer
+		push 0
+		push 1000
+		push dword[ebp-24]
+		call [glGetShaderInfoLog]
+		
+		push shader_buffer
+		push shader_import_error_3
+		call my_printf
+		add esp, 8
+		
+		xor eax, eax
+		jmp shader_import_end
+	shader_import_fs_compiled:
+	
+	;link shader
+	call [glCreateProgram]
+	mov dword[ebp-4], eax		;save the program id
+	
+	push dword[ebp-16]		;vertex shader
+	push dword[ebp-4]		;program
+	call [glAttachShader]
+	
+	cmp dword[ebp+16], 0
+	je shader_import_no_gs_attach
+		push dword[ebp-20]	;geometry shader
+		push dword[ebp-4]
+		call [glAttachShader]
+	shader_import_no_gs_attach:
+	
+	push dword[ebp-24]		;fragment shader
+	push dword[ebp-4]		;program
+	call [glAttachShader]
+	
+	push dword[ebp-4]
+	call [glLinkProgram]
+	
+	lea eax, [ebp-28]
+	push eax
+	push dword[GL_LINK_STATUS]
+	push dword[ebp-4]		;program
+	call [glGetProgramiv]
+	
+	cmp dword[ebp-28], 0
+	jne shader_import_linked
+		;program could not be linked
+		push shader_import_error_4
+		call my_printf
+		add esp, 4
+		
+		push shader_buffer
+		push 0
+		push 1000
+		push dword[ebp-4]
+		call [glGetProgramInfoLog]
+		
+		push shader_buffer
+		push shader_import_error_3
+		call my_printf
+		add esp, 8
+		
+		xor eax, eax
+		jmp shader_import_end
+	shader_import_linked:
+	
+	;the compiled shaders are no longer needed
+	push dword[ebp-16]
+	call [glDeleteShader]
+	
+	cmp dword[ebp+16], 0
+	je shader_import_no_gs_delete
+		push dword[ebp-20]
+		call [glDeleteShader]
+	shader_import_no_gs_delete:
+	
+	push dword[ebp-24]
+	call [glDeleteShader]
+	
 	
 	shader_import_end:
 	;free shader source
@@ -133,6 +346,7 @@ shader_import:
 	call my_free
 	add esp, 4
 	
+	mov eax, dword[ebp-4]
 	mov esp, ebp
 	pop ebp
 	ret
@@ -212,5 +426,17 @@ shader_import_read_file:
 	pop edi
 	pop esi
 	pop ebx
+	pop ebp
+	ret
+	
+	
+shader_destroy:
+	push ebp
+	mov ebp, esp
+	
+	push dword[ebp+8]
+	call [glDeleteProgram]
+	
+	mov esp, ebp
 	pop ebp
 	ret
