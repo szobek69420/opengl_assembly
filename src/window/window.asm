@@ -11,7 +11,9 @@ GLFW_OPENGL_PROFILE equ 0x00022008
 GLFW_OPENGL_CORE_PROFILE equ 0x00032001
 
 section .rodata use32
-	window_could_not_be_created db "window could not be created",10,0
+	window_could_not_be_created db "window: window could not be created",10,0
+	print_int db "%d",10,0
+
 
 section .text use32
 	global window_create			;GLFWwindow* window_create(const char* name)
@@ -26,13 +28,18 @@ section .text use32
 	dll_import glfw3.dll, glfwDestroyWindow
 	
 	dll_import glfw3.dll, glfwMakeContextCurrent
+	dll_import glfw3.dll, glfwGetCurrentContext
 	
 	dll_import glfw3.dll, glfwSwapInterval
 	
 	dll_import glfw3.dll, glfwGetProcAddress
 	
+	dll_import glfw3.dll, glfwGetError
+	
 	extern load_gl_functions
 	extern glViewport
+	
+	extern my_printf
 	
 window_create:
 	push ebp
@@ -64,6 +71,10 @@ window_create:
 	mov dword[ebp-4], eax
 	cmp eax, 0
 	jne window_create_no_gebasz
+		push window_could_not_be_created
+		call my_printf
+		add esp, 4
+	
 		call [glfwTerminate]
 		mov eax, 0
 		

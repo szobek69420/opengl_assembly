@@ -13,6 +13,7 @@ section .rodata use32
 	file_name db "sigma.gyatt",0
 	
 	format db "sugus %f %s",0
+	format2 db "%d",0
 	
 	float_number dd -69.42
 	
@@ -35,6 +36,8 @@ section .text use32
 	
 	dll_import glfw3.dll, glfwInit
 	dll_import glfw3.dll, glfwTerminate
+	
+	extern my_malloc
 	
 	extern my_strlen
 	extern my_strcat
@@ -60,30 +63,6 @@ section .text use32
 		
 		finit
 		
-		push write_mode
-		push file_name
-		call my_fopen
-		mov dword[file], eax
-		add esp, 8
-		
-		push sus
-		push dword[float_number]
-		push format
-		push dword[file]
-		call my_fprintf
-		add esp, 16
-		
-		push dword[file]
-		call my_fclose
-		add esp, 4
-		
-		push 0
-		push 0
-		push file_name
-		call shader_import
-		add esp, 12
-		
-		
 		push sus
 		call window_create
 		mov dword[pwindow], eax
@@ -93,6 +72,13 @@ section .text use32
 		jne window_creation_successful
 			jmp start_end
 		window_creation_successful:
+		
+		
+		push 0
+		push 0
+		push file_name
+		call shader_import
+		add esp, 12
 		
 		
 		push dword[pwindow]
