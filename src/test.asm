@@ -12,9 +12,6 @@ section .rodata use32
 	write_mode db "w",0
 	file_name db "sigma.gyatt",0
 	
-	vertex_shader_file db "sigma.vag",0
-	fragment_shader_file db "sigma.fag",0
-	
 	format db "sugus %f %s",0
 	format2 db "%d",0
 	
@@ -29,34 +26,13 @@ section .bss use32
 	pwindow resb 4		;GLFWwindow*
 
 section .text use32
-
-	dll_import user32.dll, MessageBoxA
-	
-	dll_import kernel32.dll, GetStdHandle
-	dll_import kernel32.dll, WriteFile
 	
 	dll_import kernel32.dll, ExitProcess
 	
-	dll_import glfw3.dll, glfwInit
-	dll_import glfw3.dll, glfwTerminate
-	
-	extern my_malloc
-	
-	extern my_strlen
-	extern my_strcat
-	extern my_sprintf
-	
 	extern my_printf
-	
-	extern my_fopen
-	extern my_fclose
-	extern my_fgets
-	extern my_fprintf
 	
 	extern window_create
 	extern window_destroy
-	
-	extern shader_import
 	
 	extern game_loop
 	
@@ -66,6 +42,7 @@ section .text use32
 		
 		finit
 		
+		;create window and opengl context
 		push sus
 		call window_create
 		mov dword[pwindow], eax
@@ -76,19 +53,13 @@ section .text use32
 			jmp start_end
 		window_creation_successful:
 		
-		
-		push 0
-		push fragment_shader_file
-		push vertex_shader_file
-		call shader_import
-		add esp, 12
-		
-		
+		;game loop
 		push dword[pwindow]
 		call game_loop
 		add esp, 4
 		
 		
+		;destroy window and opengl context
 		push dword[pwindow]
 		call window_destroy
 		add esp, 4
@@ -100,36 +71,3 @@ section .text use32
 		
 		push 0
 		call [ExitProcess]
-		
-		
-	get_stdout_handle:		;void get_stdout_handle(void)
-		push ebp
-		mov ebp, esp
-		
-		push -11			;stdout
-		call [GetStdHandle]
-		mov dword[stdout], eax
-		
-		mov esp, ebp
-		pop ebp
-		ret
-		
-	print_string:			;void print_string(const char* str)
-		push ebp
-		mov ebp, esp
-		
-		push dword[ebp+8]
-		call my_strlen
-		add esp, 4
-		
-		;print
-		push 0
-		push 0
-		push eax
-		push dword[ebp+8]
-		push dword[stdout]
-		call [WriteFile]
-		
-		mov esp, ebp
-		pop ebp
-		ret
