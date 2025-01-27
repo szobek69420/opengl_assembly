@@ -204,7 +204,9 @@ section .rodata use32
 	name_glDisable db "glDisable",0
 	name_glDisableVertexAttribArray db "glDisableVertexAttribArray",0
 	name_glDrawArrays db "glDrawArrays",0
+	name_glDrawArraysInstanced db "glDrawArraysInstanced",0
 	name_glDrawElements db "glDrawElements",0
+	name_glDrawElementsInstanced db "glDrawElementsInstanced",0
 	name_glEnable db "glEnable",0
 	name_glEnableVertexAttribArray db "glEnableVertexAttribArray",0
 	name_glFramebufferRenderbuffer db "glFramebufferRenderbuffer",0
@@ -249,6 +251,7 @@ section .rodata use32
 	name_glUniformMatrix3fv db "glUniformMatrix3fv",0
 	name_glUniformMatrix4fv db "glUniformMatrix4fv",0
 	name_glUseProgram db "glUseProgram",0
+	name_glVertexAttribDivisor db "glVertexAttribDivisor",0
 	name_glVertexAttribPointer db "glVertexAttribPointer",0
 	name_glViewport db "glViewport",0
 
@@ -287,7 +290,9 @@ section .bss use32
 	glFunc glDisable
 	glFunc glDisableVertexAttribArray
 	glFunc glDrawArrays
+	glFunc glDrawArraysInstanced 
 	glFunc glDrawElements
+	glFunc glDrawElementsInstanced
 	glFunc glEnable
 	glFunc glEnableVertexAttribArray
 	glFunc glFramebufferRenderbuffer
@@ -332,6 +337,7 @@ section .bss use32
 	glFunc glUniformMatrix3fv
 	glFunc glUniformMatrix4fv
 	glFunc glUseProgram
+	glFunc glVertexAttribDivisor
 	glFunc glVertexAttribPointer
 	glFunc glViewport
 
@@ -378,7 +384,9 @@ load_gl_functions:
 	load dword[ebp+8], glDisable
 	load dword[ebp+8], glDisableVertexAttribArray
 	load dword[ebp+8], glDrawArrays
+	load dword[ebp+8], glDrawArraysInstanced 
 	load dword[ebp+8], glDrawElements
+	load dword[ebp+8], glDrawElementsInstanced
 	load dword[ebp+8], glEnable
 	load dword[ebp+8], glEnableVertexAttribArray
 	load dword[ebp+8], glFramebufferRenderbuffer
@@ -423,6 +431,7 @@ load_gl_functions:
 	load dword[ebp+8], glUniformMatrix3fv
 	load dword[ebp+8], glUniformMatrix4fv
 	load dword[ebp+8], glUseProgram
+	load dword[ebp+8], glVertexAttribDivisor
 	load dword[ebp+8], glVertexAttribPointer
 	load dword[ebp+8], glViewport
 	
