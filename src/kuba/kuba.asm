@@ -19,6 +19,8 @@ section .rodata use32
 	indices:
 	dd 0,1,2,0,2,3
 	
+	uniform_pv db "pv",0
+	
 section .text use32
 	
 	global kuba_create		;void kuba_create(struct kuba* buffer)
@@ -39,6 +41,9 @@ section .text use32
 	extern glVertexAttribPointer
 	extern glEnableVertexAttribArray
 	
+	extern glUniformMatrix4fv
+	extern glGetUniformLocation
+	
 	extern glDrawElements
 	extern glUseProgram
 	
@@ -49,6 +54,7 @@ section .text use32
 	extern GL_STATIC_DRAW
 	extern GL_FLOAT
 	extern GL_UNSIGNED_INT
+	extern GL_TRUE
 	extern GL_FALSE
 	extern GL_TRIANGLES
 	
@@ -156,9 +162,23 @@ kuba_render:
 	push ebp
 	mov ebp, esp
 	
+	sub esp, 4		;pv uniform location
+	
 	;use program
 	push dword[ebp+12]
 	call [glUseProgram]
+	
+	;get uniform location and set it
+	push uniform_pv
+	push dword[ebp+12]
+	call [glGetUniformLocation]
+	
+	push dword[ebp+16]
+	push dword[GL_TRUE]		;transpose it as my matrices are row major
+	push 1
+	push dword[ebp-4]
+	call [glUniformMatrix4fv]
+	
 	
 	;bind vao
 	mov eax, dword[ebp+8]		;buffer* in eax

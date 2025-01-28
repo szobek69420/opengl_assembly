@@ -8,6 +8,7 @@
 section .rodata use32
 	ZERO dd 0.0
 	ONE dd 1.0
+	ONE_PER_THOUSAND dd 0.001
 	
 	vertex_shader_file db "shaders/sigma.vag",0
 	fragment_shader_file db "shaders/sigma.fag",0
@@ -23,13 +24,22 @@ section .bss use32
 	camera resb 36
 	pv_matrix resb 64
 	
+	pplayer resb 4
+	
 	helper resb 4
+	
+section .data use32
+	last_frame_milliseconds dd 0		;int, the GetTickCount of the last frame
+	delta_time_milliseconds dd 0		;int
+	delta_time_seconds dd 0.0			;float
 
 section .text use32
 
-	dll_import glfw3.dll, glfwSwapBuffers
-	dll_import glfw3.dll, glfwPollEvents
-	dll_import glfw3.dll, glfwWindowShouldClose
+	dll_import kernel32.dll, GetTickCount
+
+	extern glfwSwapBuffers
+	extern glfwPollEvents
+	extern  glfwWindowShouldClose
 	
 	
 	global game_loop		;void game_loop(GLFWwindow* pwindow)
@@ -62,6 +72,9 @@ section .text use32
 	extern input_mouseMoveCallback
 	extern input_mouseScrollCallback
 	
+	extern player_init
+	extern player_destroy
+	extern player_update
 	
 game_loop:
 	push ebp
@@ -72,25 +85,6 @@ game_loop:
 	;save pwindow
 	mov eax, dword[ebp+8]
 	mov dword[ebp-4], eax
-	
-	;compile shader
-	push 0
-	push fragment_shader_file
-	push vertex_shader_file
-	call shader_import
-	mov dword[kuba_shader], eax
-	add esp, 12
-	
-	
-	;create kuba
-	push kuba
-	call kuba_create
-	add esp, 4
-	
-	;init camera
-	push camera
-	call camera_init
-	add esp, 4
 	
 	;init input and set callbacks
 	call input_init
@@ -116,10 +110,59 @@ game_loop:
 	call [glfwSetScrollCallback]
 	add esp, 8
 	
-
+	;compile shader
+	push 0
+	push fragment_shader_file
+	push vertex_shader_file
+	call shader_import
+	mov dword[kuba_shader], eax
+	add esp, 12
+	
+	
+	;init camera
+	push camera
+	call camera_init
+	add esp, 4
+	
+	;create player
+	push camera
+	call player_init
+	mov dword[pplayer], eax
+	add esp, 4
+	
+	
+	;create kuba
+	push kuba
+	call kuba_create
+	add esp, 4
+	
+	;init last frame time
+	call [GetTickCount]
+	mov dword[last_frame_milliseconds], eax
 	
 	;the actual game loop
 	game_loop_loop_start:
+		
+		;calculate delta time
+		call [GetTickCount]
+		mov ecx, dword[last_frame_milliseconds]
+		
+		mov dword[last_frame_milliseconds], eax
+		sub eax, ecx
+		mov dword[delta_time_milliseconds], eax
+		
+		fild dword[delta_time_milliseconds]
+		fld dword[ONE_PER_THOUSAND]
+		fmulp
+		fstp dword[delta_time_seconds]
+		
+		
+		;player
+		push dword[delta_time_seconds]
+		push dword[pplayer]
+		call player_update
+		add esp, 8
+	
 	
 		;set clear color
 		push dword[ONE]
@@ -140,7 +183,7 @@ game_loop:
 		add esp, 8
 		
 		;render kuba
-		push 0
+		push pv_matrix
 		push dword[kuba_shader]
 		push kuba
 		call kuba_render
@@ -166,6 +209,11 @@ game_loop:
 	;destroy kuba
 	push kuba
 	call kuba_destroy
+	add esp, 4
+	
+	;destroy player
+	push dword[pplayer]
+	call player_destroy
 	add esp, 4
 	
 	mov esp, ebp

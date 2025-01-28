@@ -3,6 +3,7 @@ mkdir build
 nasm -fobj test.asm -o build/test.o
 nasm -fobj string/string.asm -o build/string.o
 nasm -fobj window/window.asm -o build/window.o
+nasm -fobj player/player.asm -o build/player.o
 nasm -fobj game_loop/game_loop.asm -o build/game_loop.o
 nasm -fobj camera/camera.asm -o build/camera.o
 nasm -fobj input/input.asm -o build/input.o
@@ -22,6 +23,7 @@ alink.exe -subsys console -oPE ^
 build/test.o ^
 build/string.o ^
 build/window.o ^
+build/player.o ^
 build/game_loop.o ^
 build/camera.o ^
 build/input.o ^
