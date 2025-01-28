@@ -5,11 +5,6 @@
     extern %2
 %endmacro
 
-GLFW_CONTEXT_VERSION_MAJOR equ 0x00022002
-GLFW_CONTEXT_VERSION_MINOR equ 0x00022003
-GLFW_OPENGL_PROFILE equ 0x00022008
-GLFW_OPENGL_CORE_PROFILE equ 0x00032001
-
 section .rodata use32
 	window_could_not_be_created db "window: window could not be created",10,0
 	print_int db "%d",10,0
@@ -19,22 +14,21 @@ section .text use32
 	global window_create			;GLFWwindow* window_create(const char* name)
 	global window_destroy			;void window_destroy(GLFWwindow* pwindow)
 	
-	dll_import glfw3.dll, glfwInit
-	dll_import glfw3.dll, glfwTerminate
+	extern glfwInit
+	extern glfwTerminate
+	extern glfwWindowHint
+	extern glfwCreateWindow
+	extern glfwDestroyWindow
+	extern glfwMakeContextCurrent
+	extern glfwGetCurrentContext
+	extern glfwSwapInterval
+	extern glfwGetProcAddress
+	extern glfwGetError
 	
-	dll_import glfw3.dll, glfwWindowHint
-	
-	dll_import glfw3.dll, glfwCreateWindow
-	dll_import glfw3.dll, glfwDestroyWindow
-	
-	dll_import glfw3.dll, glfwMakeContextCurrent
-	dll_import glfw3.dll, glfwGetCurrentContext
-	
-	dll_import glfw3.dll, glfwSwapInterval
-	
-	dll_import glfw3.dll, glfwGetProcAddress
-	
-	dll_import glfw3.dll, glfwGetError
+	extern GLFW_CONTEXT_VERSION_MAJOR
+	extern GLFW_CONTEXT_VERSION_MINOR
+	extern GLFW_OPENGL_CORE_PROFILE
+	extern GLFW_OPENGL_PROFILE
 	
 	extern load_gl_functions
 	extern glViewport
@@ -50,15 +44,15 @@ window_create:
 	call [glfwInit]
 	
 	push 3
-	push GLFW_CONTEXT_VERSION_MAJOR
+	push dword[GLFW_CONTEXT_VERSION_MAJOR]
 	call [glfwWindowHint]
 	
 	push 3
-	push GLFW_CONTEXT_VERSION_MINOR
+	push dword[GLFW_CONTEXT_VERSION_MINOR]
 	call [glfwWindowHint]
 	
-	push GLFW_OPENGL_CORE_PROFILE
-	push GLFW_OPENGL_PROFILE
+	push dword[GLFW_OPENGL_CORE_PROFILE]
+	push dword[GLFW_OPENGL_PROFILE]
 	call [glfwWindowHint]
 	
 	;create window
