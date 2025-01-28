@@ -1,5 +1,6 @@
 [BITS 32]
 
+;OpenGL functions follow stdcall!!!!!!!!!!!!!!!!!!!!
 
 %macro load 2		;loader function (stdcall), gl function name
 push name_%2

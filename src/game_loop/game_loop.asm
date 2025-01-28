@@ -12,7 +12,9 @@ section .rodata use32
 	vertex_shader_file db "shaders/sigma.vag",0
 	fragment_shader_file db "shaders/sigma.fag",0
 	
+	test_text db "skibidi lidl",10,0
 	print_int db "%d",10,0
+	print_two_ints db "%d %d",10,0
 	
 section .bss use32
 	kuba resb 12
@@ -20,6 +22,8 @@ section .bss use32
 	
 	camera resb 36
 	pv_matrix resb 64
+	
+	helper resb 4
 
 section .text use32
 
@@ -45,6 +49,19 @@ section .text use32
 	extern camera_viewProjection
 	
 	extern my_printf
+	
+	extern glfwSetKeyCallback
+	extern glfwSetMouseButtonCallback
+	extern glfwSetCursorPosCallback
+	extern glfwSetScrollCallback
+	
+	extern input_init
+	extern input_update
+	extern input_keyCallback
+	extern input_mouseButtonCallback
+	extern input_mouseMoveCallback
+	extern input_mouseScrollCallback
+	
 	
 game_loop:
 	push ebp
@@ -75,6 +92,32 @@ game_loop:
 	call camera_init
 	add esp, 4
 	
+	;init input and set callbacks
+	call input_init
+	mov dword[helper], esp
+	
+	push input_keyCallback
+	push dword[ebp-4]
+	call [glfwSetKeyCallback]
+	add esp, 8
+	
+	push input_mouseButtonCallback
+	push dword[ebp-4]
+	call [glfwSetMouseButtonCallback]
+	add esp, 8
+	
+	push input_mouseMoveCallback
+	push dword[ebp-4]
+	call [glfwSetCursorPosCallback]
+	add esp, 8
+	
+	push input_mouseScrollCallback
+	push dword[ebp-4]
+	call [glfwSetScrollCallback]
+	add esp, 8
+	
+
+	
 	;the actual game loop
 	game_loop_loop_start:
 	
@@ -84,6 +127,7 @@ game_loop:
 		push dword[ZERO]
 		push dword[ZERO]
 		call [glClearColor]
+		
 		
 		;clear color buffer bit
 		push dword[GL_COLOR_BUFFER_BIT]
@@ -105,13 +149,16 @@ game_loop:
 		;swap buffers
 		push dword[ebp-4]
 		call [glfwSwapBuffers]
+		add esp, 4
 		
-		;poll events
+		;poll events and update input
 		call [glfwPollEvents]
+		call input_update
 		
 		;check if the window is closed or not
 		push dword[ebp-4]
 		call [glfwWindowShouldClose]
+		add esp, 4
 		test eax, eax
 		jz game_loop_loop_start
 		

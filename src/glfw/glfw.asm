@@ -1,5 +1,7 @@
 [BITS 32]
 
+;GLFW functions follow cdecl!!!!!!!!!!!!!!!!!!!!
+
 %macro dll_import 2
     import %2 %1
     extern %2

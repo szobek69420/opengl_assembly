@@ -36,6 +36,10 @@ MOUSE_SCROLL_EVENT equ 4
 
 EVENT_QUEUE_MAX_SIZE equ 50
 
+section .rodata use32
+	test_text db "globus",10,0
+	print_two_ints db "%d %d",10,0
+
 section .bss use32
 	previous_key_state resb 349		;348 is GLFW_KEY_LAST
 	current_key_state resb 349
@@ -53,7 +57,7 @@ section .bss use32
 	
 	event_queue_first_index resb 4	;int
 	event_queue_size resb 4			;int
-	event_queue_data resb 200		;int*, EVENT_QUEUE_MAX_SIZE*4 bytes
+	event_queue_data resb 1000		;Event*, EVENT_QUEUE_MAX_SIZE*20 bytes
 
 section .text use32
 
@@ -66,16 +70,33 @@ section .text use32
 	;int input_queueEmpty()
 	;void input_processEvent(Event event)
 	
+	global input_keyPressed		;int input_keyPressed(int key)
+	global input_keyHeld		;int input_keyHeld(int key)
+	global input_keyReleased	;int input_keyReleased(int key)
+	
+	global input_mouseButtonPressed		;int input_mouseButtonPressed(int mouseButton)
+	global input_mouseButtonHeld		;int input_mouseButtonHeld(int mouseButton)
+	global input_mouseButtonReleased	;int input_mouseButtonReleased(int mouseButton)
+	
 	global input_keyCallback			;void input_keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	global input_mouseButtonCallback	;void input_mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	global input_mouseMoveCallback		;void input_mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 	global input_mouseScrollCallback	;void input_mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	
+	global input_mousePosition			;void input_mousePosition(int* x, int* y)
+	global input_mouseDeltaPosition		;void input_mouseDeltaPosition(int* x, int* y)
+	global input_mouseScrollDelta		;void input_mouseScrollDelta(int* x, int* y)
+	
+	
 	extern my_memset
 	extern my_memcpy
+	extern my_printf
 	
 	extern GLFW_PRESS
 	extern GLFW_RELEASE
+	
+	extern GLFW_KEY_LAST
+	extern GLFW_MOUSE_BUTTON_LAST
 	
 input_init:
 	push ebp
@@ -113,7 +134,7 @@ input_init:
 	mov dword[mouse_scroll_delta_y], 0
 	
 	;init event queue
-	push 200
+	push 1000
 	push 0
 	push event_queue_data
 	call my_memset
@@ -137,7 +158,7 @@ input_update:
 	call my_memcpy
 	add esp, 12
 	
-	push 349
+	push 8
 	push current_mouse_button_state
 	push previous_mouse_button_state
 	call my_memcpy
@@ -163,6 +184,7 @@ input_update:
 		
 		cmp dword[esp], NO_EVENT
 		je input_update_process_loop_end
+	
 		
 		;process the queried event
 		call input_processEvent
@@ -176,6 +198,199 @@ input_update:
 	pop ebp
 	ret
 	
+input_keyPressed:
+	push ebp
+	mov ebp, esp
+	
+	xor eax, eax
+	
+	;check if it is a valid keycode
+	mov ecx, dword[ebp+8]
+	cmp ecx, 0
+	jl input_keyPressed_end
+	cmp ecx, dword[GLFW_KEY_LAST]
+	jg input_keyPressed_end
+	
+	mov dl, byte[ecx+previous_key_state]
+	test dl, dl
+	jnz input_keyPressed_end		;the key was already down in the previous frame
+	
+	mov al, byte[ecx+current_key_state]
+	
+	input_keyPressed_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+input_keyHeld:
+	push ebp
+	mov ebp, esp
+	
+	xor eax, eax
+	
+	;check if it is a valid keycode
+	mov ecx, dword[ebp+8]
+	cmp ecx, 0
+	jl input_keyHeld_end
+	cmp ecx, dword[GLFW_KEY_LAST]
+	jg input_keyHeld_end
+	
+	mov al, byte[ecx+current_key_state]
+	
+	input_keyHeld_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+input_keyReleased:
+	push ebp
+	mov ebp, esp
+	
+	xor eax, eax
+	
+	;check if it is a valid keycode
+	mov ecx, dword[ebp+8]
+	cmp ecx, 0
+	jl input_keyReleased_end
+	cmp ecx, dword[GLFW_KEY_LAST]
+	jg input_keyReleased_end
+	
+	mov dl, byte[ecx+current_key_state]
+	test dl, dl
+	jnz input_keyReleased_end		;the key is (still) down
+	
+	mov al, byte[ecx+previous_key_state]
+	
+	input_keyReleased_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+input_mouseButtonPressed:
+	push ebp
+	mov ebp, esp
+	
+	xor eax, eax
+	
+	;check if it is a valid mouse button code
+	mov ecx, dword[ebp+8]
+	cmp ecx, 0
+	jl input_mouseButtonPressed_end
+	cmp ecx, dword[GLFW_MOUSE_BUTTON_LAST]
+	jg input_mouseButtonPressed_end
+	
+	mov dl, byte[ecx+previous_mouse_button_state]
+	test dl, dl
+	jnz input_mouseButtonPressed_end		;the mouse button was already down in the previous frame
+	
+	mov al, byte[ecx+current_mouse_button_state]
+	
+	input_mouseButtonPressed_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+input_mouseButtonHeld:
+	push ebp
+	mov ebp, esp
+	
+	xor eax, eax
+	
+	;check if it is a valid mouse button code
+	mov ecx, dword[ebp+8]
+	cmp ecx, 0
+	jl input_mouseButtonHeld_end
+	cmp ecx, dword[GLFW_MOUSE_BUTTON_LAST]
+	jg input_mouseButtonHeld_end
+	
+	mov al, byte[ecx+current_mouse_button_state]
+	
+	input_mouseButtonHeld_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+input_mouseButtonReleased:
+	push ebp
+	mov ebp, esp
+	
+	xor eax, eax
+	
+	;check if it is a valid mouse button code
+	mov ecx, dword[ebp+8]
+	cmp ecx, 0
+	jl input_mouseButtonReleased_end
+	cmp ecx, dword[GLFW_MOUSE_BUTTON_LAST]
+	jg input_mouseButtonReleased_end
+	
+	mov dl, byte[ecx+current_mouse_button_state]
+	test dl, dl
+	jnz input_mouseButtonReleased_end		;the mouse button is (still) down
+	
+	mov al, byte[ecx+previous_mouse_button_state]
+	
+	input_mouseButtonReleased_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+input_mousePosition:
+	push ebp
+	mov ebp, esp
+	
+	mov eax, dword[ebp+8]
+	mov ecx, dword[current_mouse_x]
+	mov dword[eax], ecx
+	
+	mov eax, dword[ebp+12]
+	mov ecx, dword[current_mouse_y]
+	mov dword[eax], ecx
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+input_mouseDeltaPosition:
+	push ebp
+	mov ebp, esp
+	
+	mov eax, dword[ebp+8]
+	mov ecx, dword[current_mouse_x]
+	sub ecx, dword[previous_mouse_x]
+	mov dword[eax], ecx
+	
+	mov eax, dword[ebp+12]
+	mov ecx, dword[current_mouse_y]
+	sub ecx, dword[previous_mouse_y]
+	mov dword[eax], ecx
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+input_mouseScrollDelta:
+	push ebp
+	mov ebp, esp
+	
+	mov eax, dword[ebp+8]
+	mov ecx, dword[mouse_scroll_delta_x]
+	mov dword[eax], ecx
+	
+	mov eax, dword[ebp+12]
+	mov ecx, dword[mouse_scroll_delta_y]
+	mov dword[eax], ecx
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+	
 input_keyCallback:
 	push ebp
 	mov ebp, esp
@@ -185,6 +400,7 @@ input_keyCallback:
 	mov eax, dword[ebp+20]
 	cmp eax, dword[GLFW_PRESS]
 	jne input_keyCallback_not_press
+	
 		mov dword[ebp-20], KEY_EVENT	;event type
 		mov ecx, dword[ebp+12]
 		mov dword[ebp-16], ecx		;key code
@@ -193,14 +409,15 @@ input_keyCallback:
 		jmp input_keyCallback_end
 		
 	input_keyCallback_not_press:
+	
+	cmp eax, dword[GLFW_RELEASE]
+	jne input_keyCallback_not_release
 		mov dword[ebp-20], KEY_EVENT
 		mov ecx, dword[ebp+12]
 		mov dword[ebp-16], ecx
 		mov dword[ebp-12], 0
 		call input_pushEvent		;event is already on the stack
 		jmp input_keyCallback_end
-		
-	cmp eax, dword[GLFW_RELEASE]
 	
 	input_keyCallback_not_release:
 	
@@ -227,14 +444,15 @@ input_mouseButtonCallback:
 		jmp input_mouseButtonCallback_end
 		
 	input_mouseButtonCallback_not_press:
+	
+	cmp eax, dword[GLFW_RELEASE]
+	jne input_mouseButtonCallback_not_release
 		mov dword[ebp-20], MOUSE_BUTTON_EVENT
 		mov ecx, dword[ebp+12]
 		mov dword[ebp-16], ecx
 		mov dword[ebp-12], 0
 		call input_pushEvent		;event is already on the stack
 		jmp input_mouseButtonCallback_end
-		
-	cmp eax, dword[GLFW_RELEASE]
 	
 	input_mouseButtonCallback_not_release:
 	
@@ -429,6 +647,7 @@ input_popEvent:
 		xor eax, eax
 	input_popEvent_no_overflow:
 	mov dword[event_queue_first_index], eax
+	
 	
 	mov esp, ebp
 	pop ebp
