@@ -317,10 +317,13 @@ section .text use32
 	dll_import glfw3.dll, glfwGetProcAddress
 	dll_import glfw3.dll, glfwMakeContextCurrent
 	dll_import glfw3.dll, glfwPollEvents
+	dll_import glfw3.dll, glfwSetCursorPos
 	dll_import glfw3.dll, glfwSetCursorPosCallback
+	dll_import glfw3.dll, glfwSetInputMode
 	dll_import glfw3.dll, glfwSetKeyCallback
 	dll_import glfw3.dll, glfwSetMouseButtonCallback
 	dll_import glfw3.dll, glfwSetScrollCallback
+	dll_import glfw3.dll, glfwSetWindowShouldClose
 	dll_import glfw3.dll, glfwSetWindowSizeCallback
 	dll_import glfw3.dll, glfwSwapBuffers
 	dll_import glfw3.dll, glfwSwapInterval

@@ -29,6 +29,8 @@ section .text use32
 	extern GLFW_CONTEXT_VERSION_MINOR
 	extern GLFW_OPENGL_CORE_PROFILE
 	extern GLFW_OPENGL_PROFILE
+	extern GLFW_TRUE
+	extern GLFW_CENTER_CURSOR
 	
 	extern load_gl_functions
 	extern glViewport
@@ -46,21 +48,29 @@ window_create:
 	push 3
 	push dword[GLFW_CONTEXT_VERSION_MAJOR]
 	call [glfwWindowHint]
+	add esp, 8
 	
 	push 3
 	push dword[GLFW_CONTEXT_VERSION_MINOR]
 	call [glfwWindowHint]
+	add esp, 8
 	
 	push dword[GLFW_OPENGL_CORE_PROFILE]
 	push dword[GLFW_OPENGL_PROFILE]
 	call [glfwWindowHint]
+	add esp, 8
+	
+	push dword[GLFW_TRUE]
+	push dword[GLFW_CENTER_CURSOR]
+	call [glfwWindowHint]
+	add esp, 8
 	
 	;create window
 	push 0
 	push 0
 	push dword[ebp+8]
-	push 420
-	push 420
+	push 1000
+	push 1000
 	call [glfwCreateWindow]
 	mov dword[ebp-4], eax
 	cmp eax, 0
@@ -105,8 +115,8 @@ window_create:
 	
 	
 	;set the viewport size
-	push 420
-	push 420
+	push 1000
+	push 1000
 	push 0
 	push 0
 	call [glViewport]

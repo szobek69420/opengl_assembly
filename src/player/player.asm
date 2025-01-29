@@ -14,6 +14,12 @@ section .rodata use32
 	
 	UP dd 0.0, 1.0, 0.0
 	DOWN dd 0.0, -1.0, 0.0
+	
+	LOOK_SENSITIVITY_X dd -0.03
+	LOOK_SENSITIVITY_Y dd 0.03
+	
+	print_two_floats db "%f %f",10,0
+	test_text db "big chungus",10,0
 
 section .text use32
 
@@ -23,6 +29,7 @@ section .text use32
 	
 	extern my_malloc
 	extern my_free
+	extern my_printf
 	
 	extern vec3_normalize
 	extern vec3_scale
@@ -34,6 +41,7 @@ section .text use32
 	extern camera_right
 	
 	extern input_keyHeld
+	extern input_mouseDeltaPosition
 	extern GLFW_KEY_W
 	extern GLFW_KEY_A
 	extern GLFW_KEY_S
@@ -86,6 +94,11 @@ player_update:
 	push dword[ebp+12]
 	push dword[ebp+8]
 	call player_move
+	add esp, 8
+	
+	push dword[ebp+12]
+	push dword[ebp+8]
+	call player_look
 	add esp, 8
 	
 	mov esp, ebp
@@ -265,6 +278,72 @@ player_move:		;void player_move(player* player, float deltaTime)
 	mov dword[eax+4], ecx
 	mov ecx, dword[ebp-4]
 	mov dword[eax+8], ecx
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+player_look:		;void player_look(player* pplayer, float deltaTime)
+	push ebp
+	mov ebp, esp
+	
+	sub esp, 4		;pitch
+	sub esp, 4		;yaw
+	sub esp, 4		;delta pitch
+	sub esp, 4		;delta yaw
+	
+	;copy the old values
+	mov eax, dword[ebp+8]		;player* in eax
+	mov ecx, dword[eax+16]
+	mov dword[ebp-4], ecx
+	mov ecx, dword[eax+20]
+	mov dword[ebp-8], ecx
+	
+	
+	;calculate the delta and new values
+	lea eax, [ebp-12]
+	lea ecx, [ebp-16]
+	push eax
+	push ecx
+	call input_mouseDeltaPosition
+	add esp, 8
+	
+	
+	fild dword[ebp-12]
+	fstp dword[ebp-12]
+	fild dword[ebp-16]
+	fstp dword[ebp-16]
+	
+	
+	movss xmm0, dword[LOOK_SENSITIVITY_X]
+	movss xmm2, dword[ebp-12]
+	mulss xmm2, xmm0
+	addss xmm2, dword[ebp-4]
+	movss dword[ebp-4], xmm2
+	
+	movss xmm0, dword[LOOK_SENSITIVITY_Y]
+	movss xmm2, dword[ebp-16]
+	mulss xmm2, xmm0
+	addss xmm2, dword[ebp-8]
+	movss dword[ebp-8], xmm2
+	
+	
+	;set the values of the player
+	mov eax, dword[ebp+8]
+	mov ecx, dword[ebp-4]
+	mov dword[eax+16], ecx
+	mov ecx, dword[ebp-8]
+	mov dword[eax+20], ecx
+	
+	;set the values of the camera as well
+	mov eax, dword[ebp+8]		;player* in eax
+	mov eax, dword[eax]			;camera* in eax
+	
+	mov ecx, dword[ebp-4]
+	mov dword[eax+12], ecx
+	mov ecx, dword[ebp-8]
+	mov dword[eax+16], ecx
+	
 	
 	mov esp, ebp
 	pop ebp

@@ -11,13 +11,38 @@ section .rodata use32
 	print_int db "%d",10,0
 
 	vertices:
-	dd -0.5, -0.5, 0.0
-	dd -0.5, 0.5, 0.0
-	dd 0.5, 0.5, 0.0
-	dd 0.5, -0.5, 0.0
+	dd -0.5, -0.5, 0.5,	1.0, 1.0, 1.0,
+	dd -0.5, 0.5, 0.5,	1.0, 1.0, 1.0,
+	dd 0.5, 0.5, 0.5,	1.0, 1.0, 1.0,
+	dd 0.5, -0.5, 0.5,	1.0, 1.0, 1.0,
+	dd -0.5, -0.5, 0.5,	1.0, 0.0, 1.0,
+	dd -0.5, -0.5, -0.5,1.0, 0.0, 1.0,
+	dd -0.5, 0.5, -0.5,	1.0, 0.0, 1.0,
+	dd -0.5, 0.5, 0.5,	1.0, 0.0, 1.0,
+	dd 0.5, -0.5, -0.5,	0.0, 1.0, 1.0,
+	dd 0.5, 0.5, -0.5,	0.0, 1.0, 1.0,
+	dd -0.5, 0.5, -0.5,	0.0, 1.0, 1.0,
+	dd -0.5, -0.5, -0.5,0.0, 1.0, 1.0,
+	dd 0.5, 0.5, 0.5,	1.0, 1.0, 0.0,
+	dd 0.5, 0.5, -0.5,	1.0, 1.0, 0.0,
+	dd 0.5, -0.5, -0.5,	1.0, 1.0, 0.0,
+	dd 0.5, -0.5, 0.5,	1.0, 1.0, 0.0,
+	dd -0.5, 0.5, 0.5,	1.0, 0.0, 0.0,
+	dd -0.5, 0.5, -0.5,	1.0, 0.0, 0.0,
+	dd 0.5, 0.5, -0.5,	1.0, 0.0, 0.0,
+	dd 0.5, 0.5, 0.5,	1.0, 0.0, 0.0,
+	dd 0.5, -0.5, 0.5,	0.0, 0.0, 0.0,
+	dd 0.5, -0.5, -0.5,	0.0, 0.0, 0.0,
+	dd -0.5, -0.5, -0.5,0.0, 0.0, 0.0,
+	dd -0.5, -0.5, 0.5,	0.0, 0.0, 0.0,
 	
 	indices:
-	dd 0,1,2,0,2,3
+	dd 0,1,2,0,2,3,
+	dd 4,5,6,4,6,7,
+	dd 8,9,10,8,10,11,
+	dd 12,13,14,12,14,15,
+	dd 16,17,18,16,18,19,
+	dd 20,21,22,20,22,23
 	
 	uniform_pv db "pv",0
 	
@@ -87,19 +112,29 @@ kuba_create:
 	
 	push dword[GL_STATIC_DRAW]
 	push vertices
-	push 64
+	push 576
 	push dword[GL_ARRAY_BUFFER]
 	call [glBufferData]
 	
 	push 0
-	push 12
+	push 24
 	push dword[GL_FALSE]
 	push dword[GL_FLOAT]
 	push 3
 	push 0
-	call [glVertexAttribPointer]
+	call [glVertexAttribPointer]		;pos
+	
+	push 12
+	push 24
+	push dword[GL_FALSE]
+	push dword[GL_FLOAT]
+	push 3
+	push 1
+	call [glVertexAttribPointer]		;colour
 	
 	push 0
+	call [glEnableVertexAttribArray]
+	push 1
 	call [glEnableVertexAttribArray]
 	
 	;create ebo and fill it up with data
@@ -114,7 +149,7 @@ kuba_create:
 	
 	push dword[GL_STATIC_DRAW]
 	push indices
-	push 24
+	push 144
 	push dword[GL_ELEMENT_ARRAY_BUFFER]
 	call [glBufferData]
 	
@@ -188,7 +223,7 @@ kuba_render:
 	;draw
 	push 0
 	push dword[GL_UNSIGNED_INT]
-	push 6
+	push 36
 	push dword[GL_TRIANGLES]
 	call [glDrawElements]
 	

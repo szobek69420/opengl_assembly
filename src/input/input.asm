@@ -52,12 +52,14 @@ section .bss use32
 	current_mouse_x resb 4
 	current_mouse_y resb 4
 	
+	
 	mouse_scroll_delta_x resb 4		;int
 	mouse_scroll_delta_y resb 4
 	
 	event_queue_first_index resb 4	;int
 	event_queue_size resb 4			;int
 	event_queue_data resb 1000		;Event*, EVENT_QUEUE_MAX_SIZE*20 bytes
+
 
 section .text use32
 
@@ -87,6 +89,7 @@ section .text use32
 	global input_mouseDeltaPosition		;void input_mouseDeltaPosition(int* x, int* y)
 	global input_mouseScrollDelta		;void input_mouseScrollDelta(int* x, int* y)
 	
+	global input_setMousePosition		;void input_setMousePosition(GLFWWindow* window, int x, int y)
 	
 	extern my_memset
 	extern my_memcpy
@@ -97,6 +100,8 @@ section .text use32
 	
 	extern GLFW_KEY_LAST
 	extern GLFW_MOUSE_BUTTON_LAST
+	
+	extern glfwSetCursorPos
 	
 input_init:
 	push ebp
@@ -476,8 +481,14 @@ input_mouseMoveCallback:
 	fld qword[ebp+20]
 	fistp dword[ebp-12]
 	
-	call input_pushEvent
+	;check if any component in non-zero
+	mov ecx, dword[ebp-16]
+	or ecx, dword[ebp-12]
+	test ecx, ecx
+	jz input_mouseMoveCallback_end
+		call input_pushEvent
 	
+	input_mouseMoveCallback_end:
 	mov esp, ebp
 	pop ebp
 	ret
@@ -497,6 +508,27 @@ input_mouseScrollCallback:
 	fistp dword[ebp-12]
 	
 	call input_pushEvent
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+input_setMousePosition:
+	push ebp
+	mov ebp, esp
+	
+	sub esp, 16		;space for the two double
+	
+	;convert the ints to doubles
+	fild dword[ebp+12]
+	fstp qword[ebp-16]
+	fild dword[ebp+16]
+	fstp qword[ebp-8]
+	
+	;morb ahead
+	push dword[ebp+8]
+	call [glfwSetCursorPos]
+	add esp, 20
 	
 	mov esp, ebp
 	pop ebp

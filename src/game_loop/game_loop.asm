@@ -36,18 +36,17 @@ section .data use32
 section .text use32
 
 	dll_import kernel32.dll, GetTickCount
-
-	extern glfwSwapBuffers
-	extern glfwPollEvents
-	extern  glfwWindowShouldClose
 	
 	
 	global game_loop		;void game_loop(GLFWwindow* pwindow)
 	
 	extern glClear
 	extern glClearColor
+	extern glEnable
 	
+	extern GL_DEPTH_TEST
 	extern GL_COLOR_BUFFER_BIT
+	extern GL_DEPTH_BUFFER_BIT
 	
 	extern shader_import
 	
@@ -60,13 +59,23 @@ section .text use32
 	
 	extern my_printf
 	
+	extern glfwSwapBuffers
+	extern glfwPollEvents
+	extern glfwWindowShouldClose
+	extern glfwSetWindowShouldClose
 	extern glfwSetKeyCallback
 	extern glfwSetMouseButtonCallback
 	extern glfwSetCursorPosCallback
 	extern glfwSetScrollCallback
+	extern glfwSetInputMode
+	extern GLFW_CURSOR
+	extern GLFW_CURSOR_DISABLED
+	extern GLFW_KEY_ESCAPE
 	
 	extern input_init
 	extern input_update
+	extern input_keyReleased
+	extern input_setMousePosition
 	extern input_keyCallback
 	extern input_mouseButtonCallback
 	extern input_mouseMoveCallback
@@ -110,6 +119,14 @@ game_loop:
 	call [glfwSetScrollCallback]
 	add esp, 8
 	
+	;hide cursor
+	push dword[GLFW_CURSOR_DISABLED]
+	push dword[GLFW_CURSOR]
+	push dword[ebp-4]
+	call [glfwSetInputMode]
+	add esp, 12
+	
+	
 	;compile shader
 	push 0
 	push fragment_shader_file
@@ -135,6 +152,10 @@ game_loop:
 	push kuba
 	call kuba_create
 	add esp, 4
+	
+	;enable depth test
+	push dword[GL_DEPTH_TEST]
+	call [glEnable]
 	
 	;init last frame time
 	call [GetTickCount]
@@ -172,8 +193,10 @@ game_loop:
 		call [glClearColor]
 		
 		
-		;clear color buffer bit
-		push dword[GL_COLOR_BUFFER_BIT]
+		;clear color and depth buffer bit
+		mov eax, dword[GL_COLOR_BUFFER_BIT]
+		or eax, dword[GL_DEPTH_BUFFER_BIT]
+		push eax
 		call [glClear]
 		
 		;get camera pv matrix
@@ -197,6 +220,18 @@ game_loop:
 		;poll events and update input
 		call [glfwPollEvents]
 		call input_update
+
+		;check if the user is trying to escape
+		push dword[GLFW_KEY_ESCAPE]
+		call input_keyReleased
+		add esp, 4
+		test eax, eax
+		jz game_loop_loop_no_escape
+			push 69
+			push dword[ebp-4]
+			call [glfwSetWindowShouldClose]
+			add esp, 8
+		game_loop_loop_no_escape:
 		
 		;check if the window is closed or not
 		push dword[ebp-4]
