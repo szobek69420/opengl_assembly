@@ -19,6 +19,7 @@ nasm -fobj glm3/vec4.asm -o build/vec4.o
 nasm -fobj glm3/mat3.asm -o build/mat3.o
 nasm -fobj glm3/mat4.asm -o build/mat4.o
 nasm -fobj player/player.asm -o build/player.o
+nasm -fobj hypershapes/hyperplane.asm -o build/hyperplane.o
 alink.exe -subsys console -oPE ^
 build/test.o ^
 build/string.o ^
@@ -32,6 +33,7 @@ build/opengl.o ^
 build/shader.o ^
 build/kuba.o ^
 build/player.o ^
+build/hyperplane.o ^
 build/mat4.o ^
 build/mat3.o ^
 build/vec4.o ^

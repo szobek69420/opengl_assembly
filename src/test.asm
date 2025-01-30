@@ -24,6 +24,9 @@ section .bss use32
 	file resb 4
 	
 	pwindow resb 4		;GLFWwindow*
+	
+	hyperPlane resb 64
+	hyperPlaneNormal resb 16
 
 section .text use32
 	
@@ -36,11 +39,29 @@ section .text use32
 	
 	extern game_loop
 	
+	extern hyperPlane_create
+	extern hyperPlane_getNormal
+	extern vec4_print
+	
 	..start:
 		push ebp
 		mov ebp, esp
 		
 		finit
+		
+		;hyperplane test
+		push hyperPlane
+		call hyperPlane_create
+		add esp, 4
+		
+		push hyperPlaneNormal
+		push hyperPlane
+		call hyperPlane_getNormal
+		add esp, 8
+		
+		push hyperPlaneNormal
+		call vec4_print
+		add esp, 4
 		
 		;create window and opengl context
 		push sus
