@@ -90,10 +90,12 @@ window_create:
 	;set the current context to this thread
 	push dword[ebp-4]
 	call [glfwMakeContextCurrent]
+	add esp, 4
 	
-	;swap as fast as possible
+	;enable vsync
 	push 0
 	call [glfwSwapInterval]
+	add esp, 4
 	
 	;load the opengl functions
 	push dword[glfwGetProcAddress]
