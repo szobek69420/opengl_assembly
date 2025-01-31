@@ -102,6 +102,9 @@ section .text use32
 	
 	extern my_memset_dword
 	
+	extern vec4_mulWithMat
+	
+	extern vector_push_back
 	
 hyperCube_create:
 	push ebp
@@ -139,12 +142,76 @@ hyperCube_intersectWithPlane:
 	
 	
 ;helper function for hyperCube_intersectWithPlane
-;void hyperCube_cellIntersection(HyperPlane* pplane, HyperCube* pcube, 
+;void hyperCube_cellIntersection(
+;	HyperPlane* pTranslatedPlane, 
+;	HyperCube* pcube, 
+;	int cellIndex, 
+;	vec4* normalizedPlaneNormal, 
+;	vector<vec3>* vertices, 
+;	vector<int>* indices
+;)
+;vertex and index buffers should be at least 6 elements long
 hyperCube_cellIntersection:
 	push ebp
+	push esi
+	push edi
 	mov ebp, esp
 	
+	sub esp, 4		;current vertex count
+	sub esp, 4		;number of added vertices
+	
+	sub esp, 128	;scaled and rotated cell vertices
+	
+	mov eax, dword[ebp+32]
+	mov eax, dword[eax]
+	mov dword[ebp-4], eax
+	
+	mov dword[ebp-8], 0
+	
+	;copy the vertex data
+	lea eax, [ebp-136]
+	mov ecx, dword[ebp+24]		;cell index
+	imul ecx, 192
+	add ecx, cell0		;cell data in ecx
+	mov edx, 8
+	hyperCube_cellIntersection_copy_loop_start:
+		push edx		;save edx
+		push 16
+		push ecx
+		push eax
+		call my_memcpy
+		pop eax		;restore eax
+		pop ecx		;restore ecx
+		add esp, 4
+		pop edx		;restore edx
+		
+		add eax, 16
+		add ecx, 24
+		dec edx
+		test edx, edx
+		jnz hyperCube_cellIntersection_copy_loop_start
+		
+	;apply transforms on cell vertices
+	lea eax, [ebp-136]
+	mov ecx, dword[ebp+20]
+	add ecx, [ecx+16]		;address of the transform matrix
+	mov edx, 8
+	
+	push ecx
+	push eax
+	hyperCube_cellIntersection_transform_loop_start:
+		call vec4_mulWithMat
+		
+		add dword[esp], 16
+		dec edx
+		test edx, edx
+		jnz hyperCube_cellIntersection_transform_loop_start
+	add esp, 8
+		
+	
 	mov esp, ebp
+	pop edi
+	pop esi
 	pop ebp
 	ret
 	

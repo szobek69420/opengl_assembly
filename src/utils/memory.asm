@@ -161,7 +161,7 @@ my_memcmp:
 	mov ebp, esp
 	
 	;check if the byteCount is valid
-	mov eax, dword[ebp+16]
+	mov eax, dword[ebp+20]
 	cmp eax, 0
 	jg my_memcmp_byteCount_valid
 		xor eax, eax
@@ -169,8 +169,9 @@ my_memcmp:
 	my_memcmp_byteCount_valid:
 	
 	;compare
-	mov ecx, dword[ebp+8]		;m1 in ecx
-	mov edx, dword[ebp+12]		;m2 in edx
+	mov eax, dword[ebp+20]		;size in eax
+	mov ecx, dword[ebp+12]		;m1 in ecx
+	mov edx, dword[ebp+16]		;m2 in edx
 	my_memcmp_loop_start:
 		mov bl, byte[ecx]
 		cmp bl, byte[edx]
