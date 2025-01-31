@@ -98,6 +98,7 @@ section .rodata use32
 section .text use32
 
 	global hyperCube_create		;void hyperCube_create(HyperCube* buffer)
+	global hyperCube_intersectWithPlane		;void hyperCube_iwp(HyperPlane* plane, HyperCube* pcube, vector<vec3>* vertexBuffer, vector<int>* indexBuffer)
 	
 	extern my_memset_dword
 	
@@ -120,6 +121,28 @@ hyperCube_create:
 	mov dword[eax+36], ecx
 	mov dword[eax+56], ecx
 	mov dword[eax+76], ecx
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+
+hyperCube_intersectWithPlane:
+	push ebp
+	mov ebp, esp
+	
+	
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+;helper function for hyperCube_intersectWithPlane
+;void hyperCube_cellIntersection(HyperPlane* pplane, HyperCube* pcube, 
+hyperCube_cellIntersection:
+	push ebp
+	mov ebp, esp
 	
 	mov esp, ebp
 	pop ebp

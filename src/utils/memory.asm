@@ -21,6 +21,8 @@ section .text use32
 	global my_memset			;void my_memset(void* mem, int(!!!) byteValue, int numberOfBytes)		;the last byte of the value will be berucksichtingt
 	global my_memset_dword		;void my_memset_dword(void* mem, int dwordValue, int numberOfBytes)		;the number of bytes shall be divisible by 4
 	
+	global my_memcmp			;void my_memcmp(void* m1, void* m2, int byteCount)
+	
 	global my_malloc			;void* my_malloc(int numberOfBytes)
 	global my_realloc			;void* my_realloc(void* org, int newNumberOfBytes)
 	global my_free				;void my_free(void* mem2yeet)
@@ -149,6 +151,53 @@ my_memset_dword:
 	
 	my_memset_dword_end:
 	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+my_memcmp:
+	push ebp
+	push ebx
+	mov ebp, esp
+	
+	;check if the byteCount is valid
+	mov eax, dword[ebp+16]
+	cmp eax, 0
+	jg my_memcmp_byteCount_valid
+		xor eax, eax
+		jmp my_memcmp_end
+	my_memcmp_byteCount_valid:
+	
+	;compare
+	mov ecx, dword[ebp+8]		;m1 in ecx
+	mov edx, dword[ebp+12]		;m2 in edx
+	my_memcmp_loop_start:
+		mov bl, byte[ecx]
+		cmp bl, byte[edx]
+		je my_memcmp_loop_continue
+		jg my_memcmp_loop_greater
+		jl my_memcmp_loop_less
+		
+		my_memcmp_loop_greater:
+			mov eax, 69
+			jmp my_memcmp_end
+		my_memcmp_loop_less:
+			mov eax, -69
+			jmp my_memcmp_end
+			
+		my_memcmp_loop_continue:
+		inc ecx
+		inc edx
+		dec eax
+		test eax, eax
+		jnz my_memcmp_loop_start
+			;in this case the memory regions are equal
+			xor eax, eax
+			jmp my_memcmp_end
+	
+	my_memcmp_end:
+	mov esp, ebp
+	pop ebx
 	pop ebp
 	ret
 	
