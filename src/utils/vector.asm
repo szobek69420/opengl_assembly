@@ -21,7 +21,7 @@ section .text use32
 	extern my_memcpy
 	extern my_memcmp
 
-	global vector_init			;vector vector_init(int element_size)
+	global vector_init			;void vector_init(vector* buffer, int element_size)
 	global vector_destroy		;void vector_destroy(vector*)
 	global vector_clear			;void vector_clear(vector*)
 	global vector_at			;<element>* vector_at(vector*, int index)

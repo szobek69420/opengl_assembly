@@ -27,6 +27,9 @@ section .bss use32
 	
 	hyperPlane resb 64
 	hyperPlaneNormal resb 16
+	hyperCube resb 80
+	hyperCube_vertices resb 16
+	hyperCube_indices resb 16
 
 section .text use32
 	
@@ -41,7 +44,11 @@ section .text use32
 	
 	extern hyperPlane_create
 	extern hyperPlane_getNormal
+	extern hyperCube_create
+	extern hyperCube_intersectWithPlane
 	extern vec4_print
+	
+	extern vector_init
 	
 	..start:
 		push ebp
@@ -62,6 +69,28 @@ section .text use32
 		push hyperPlaneNormal
 		call vec4_print
 		add esp, 4
+		
+		;hypercube test
+		push 12
+		push hyperCube_vertices
+		call vector_init
+		add esp, 8
+		
+		push 4
+		push hyperCube_indices
+		call vector_init
+		add esp, 8
+		
+		push hyperCube
+		call hyperCube_create
+		add esp, 4
+		
+		push hyperCube_indices
+		push hyperCube_vertices
+		push hyperCube
+		push hyperPlane
+		call hyperCube_intersectWithPlane
+		add esp, 16
 		
 		;create window and opengl context
 		push sus
