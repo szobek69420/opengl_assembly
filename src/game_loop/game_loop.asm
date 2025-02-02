@@ -10,16 +10,12 @@ section .rodata use32
 	ONE dd 1.0
 	ONE_PER_THOUSAND dd 0.001
 	
-	vertex_shader_file db "shaders/sigma.vag",0
-	fragment_shader_file db "shaders/sigma.fag",0
-	
 	test_text db "skibidi lidl",10,0
 	print_int db "%d",10,0
 	print_two_ints db "%d %d",10,0
 	
 section .bss use32
-	kuba resb 12
-	kuba_shader resb 4
+	pkuba resb 4
 	
 	camera resb 36
 	pv_matrix resb 64
@@ -43,16 +39,20 @@ section .text use32
 	extern glClear
 	extern glClearColor
 	extern glEnable
+	extern glFrontFace
 	
 	extern GL_DEPTH_TEST
 	extern GL_COLOR_BUFFER_BIT
 	extern GL_DEPTH_BUFFER_BIT
+	extern GL_CULL_FACE
+	extern GL_CCW
 	
 	extern shader_import
 	
 	extern kuba_create
 	extern kuba_destroy
 	extern kuba_render
+
 	
 	extern camera_init
 	extern camera_viewProjection
@@ -87,9 +87,6 @@ section .text use32
 	
 	extern renderable_init
 	extern renderable_deinit
-	extern renderable_create
-	extern renderable_destroy
-	extern RENDERABLE_ATTRIB_P3
 	
 game_loop:
 	push ebp
@@ -133,19 +130,13 @@ game_loop:
 	add esp, 12
 	
 	
-	;compile shader
-	push 0
-	push fragment_shader_file
-	push vertex_shader_file
-	call shader_import
-	mov dword[kuba_shader], eax
-	add esp, 12
-	
-	
 	;init camera
 	push camera
 	call camera_init
 	add esp, 4
+	
+	;init renderable
+	call renderable_init
 	
 	;create player
 	push camera
@@ -155,12 +146,16 @@ game_loop:
 	
 	
 	;create kuba
-	push kuba
 	call kuba_create
-	add esp, 4
+	mov dword[pkuba], eax
 	
-	;enable depth test
+	;enable depth test and face cull
 	push dword[GL_DEPTH_TEST]
+	call [glEnable]
+	
+	push dword[GL_CCW]
+	call [glFrontFace]
+	push dword[GL_CULL_FACE]
 	call [glEnable]
 	
 	;init last frame time
@@ -213,10 +208,9 @@ game_loop:
 		
 		;render kuba
 		push pv_matrix
-		push dword[kuba_shader]
-		push kuba
+		push dword[pkuba]
 		call kuba_render
-		add esp, 12
+		add esp, 8
 		
 		;swap buffers
 		push dword[ebp-4]
@@ -248,7 +242,7 @@ game_loop:
 		
 		
 	;destroy kuba
-	push kuba
+	push dword[pkuba]
 	call kuba_destroy
 	add esp, 4
 	
@@ -256,6 +250,9 @@ game_loop:
 	push dword[pplayer]
 	call player_destroy
 	add esp, 4
+	
+	;deinit renderable
+	call renderable_deinit
 	
 	mov esp, ebp
 	pop ebp

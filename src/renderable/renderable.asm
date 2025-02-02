@@ -25,7 +25,15 @@ section .rodata
 	vertex_shader_p3 db "shaders/p3.vag",0
 	fragment_shader_p3 db "shaders/p3.fag",0
 	
+	uniform_name_pv db "pv",0
+	uniform_name_model db "model",0
+	
+	EPSILON dd 0.00001
 	ONE dd 1.0
+	
+	X_AXIS dd 1.0, 0.0, 0.0
+	Y_AXIS dd 0.0, 1.0, 0.0
+	Z_AXIS dd 0.0, 0.0, -1.0
 	
 section .data use32
 	renderable_initialized dd 0
@@ -39,7 +47,7 @@ section .text use32
 	global renderable_create			;Renderable* renderable_create(vector<vec3>* vertices, vector<int>* indices, int vertexAttribLayout)
 	global renderable_destroy			;void renderable_destroy(Renderable* renderable)
 	
-	global renderable_render			;void renderable_render(Renderable* renderable, GLuint texture)
+	global renderable_render			;void renderable_render(Renderable* renderable, mat4* pv, GLuint texture)
 	
 	
 	
@@ -52,6 +60,8 @@ section .text use32
 	extern glBufferData
 	extern glVertexAttribPointer
 	extern glEnableVertexAttribArray
+	extern glGetUniformLocation
+	extern glUniformMatrix4fv
 	extern glUseProgram
 	extern glDrawElements
 	extern GL_ARRAY_BUFFER
@@ -59,6 +69,7 @@ section .text use32
 	extern GL_STATIC_DRAW
 	extern GL_FLOAT
 	extern GL_UNSIGNED_INT
+	extern GL_TRUE
 	extern GL_FALSE
 	extern GL_TRIANGLES
 	
@@ -70,6 +81,11 @@ section .text use32
 	
 	extern shader_import
 	extern shader_destroy
+	
+	extern mat4_init
+	extern mat4_scale
+	extern mat4_rotate
+	extern mat4_translate
 	
 renderable_init:
 	push ebp
@@ -273,12 +289,15 @@ renderable_render:
 	push ebp
 	mov ebp, esp
 	
+	sub esp, 4		;currently used shader
+	sub esp, 64		;model matrix
+	
 	;is texture necessary
 	mov eax, dword[ebp+8]
 	mov eax, dword[eax+52]
 	cmp eax, dword[RENDERABLE_ATTRIB_P3]
 	je renderable_render_bind_texture_done
-	
+		;set texture
 	renderable_render_bind_texture_done:
 	
 	;choose shader
@@ -290,9 +309,41 @@ renderable_render:
 	renderable_render_shader_p3:
 		push dword[shader_p3]
 		call [glUseProgram]
+		
+		mov eax, dword[shader_p3]
+		mov dword[ebp-4], eax
 		jmp renderable_render_shader_done
 		
 	renderable_render_shader_done:
+	
+	;set matrices
+	push uniform_name_pv
+	push dword[ebp-4]		;current shader
+	call [glGetUniformLocation]
+	
+	push dword[ebp+12]		;pv
+	push dword[GL_TRUE]
+	push 1
+	push eax
+	call [glUniformMatrix4fv]
+	
+	
+	lea eax, [ebp-68]
+	push eax
+	push dword[ebp+8]
+	call renderable_calculateModel
+	add esp, 8
+	
+	push uniform_name_model
+	push dword[ebp-4]
+	call [glGetUniformLocation]
+	
+	lea ecx, [ebp-68]
+	push ecx
+	push dword[GL_TRUE]
+	push 1
+	push eax
+	call [glUniformMatrix4fv]
 	
 	;render
 	mov eax, dword[ebp+8]
@@ -312,6 +363,74 @@ renderable_render:
 	call [glUseProgram]
 	
 	renderable_render_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+;void renderable_calculateModel(Renderable* renderable, mat4* buffer)
+renderable_calculateModel:
+	push ebp
+	mov ebp, esp
+	
+	;initialize buffer
+	push dword[ONE]
+	push dword[ebp+12]
+	call mat4_init
+	
+	;translation
+	mov eax, dword[ebp+8]
+	add eax, 16
+	push eax		;&position
+	push dword[ebp+12]
+	call mat4_translate
+	
+	;rotations (the ones with very little value are skipped)
+	mov eax, dword[ebp+8]			;renderable in eax
+	mov ecx, dword[eax+28]			;renderable.rotation.x in ecx
+	and ecx, 0x7fffffff				;|renderable.rotation.x| in ecx
+	cmp ecx, dword[EPSILON]
+	jl renderable_calculateModel_skip_x
+		push dword[eax+28]
+		push X_AXIS
+		push dword[ebp+12]
+		call mat4_rotate
+	renderable_calculateModel_skip_x:
+	
+	mov eax, dword[ebp+8]			;renderable in eax
+	mov ecx, dword[eax+32]			;renderable.rotation.y in ecx
+	and ecx, 0x7fffffff				;|renderable.rotation.y| in ecx
+	cmp ecx, dword[EPSILON]
+	jl renderable_calculateModel_skip_y
+		push dword[eax+32]
+		push Y_AXIS
+		push dword[ebp+12]
+		call mat4_rotate
+	renderable_calculateModel_skip_y:
+	
+	mov eax, dword[ebp+8]			;renderable in eax
+	mov ecx, dword[eax+36]			;renderable.rotation.z in ecx
+	and ecx, 0x7fffffff				;|renderable.rotation.z| in ecx
+	cmp ecx, dword[EPSILON]
+	jl renderable_calculateModel_skip_z
+		push dword[eax+36]
+		push Y_AXIS
+		push dword[ebp+12]
+		call mat4_rotate
+	renderable_calculateModel_skip_z:
+	
+	
+	;scale
+	mov eax, dword[ebp+8]
+	push dword[ONE]
+	push dword[eax+48]
+	push dword[eax+44]
+	push dword[eax+40]
+	mov eax, esp
+	push eax
+	push dword[ebp+12]
+	call mat4_scale
+	
 	mov esp, ebp
 	pop ebp
 	ret

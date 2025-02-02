@@ -1,12 +1,5 @@
 [BITS 32]
 
-;kuba layout
-;struct kuba{
-;	GLuint vao;		4
-;	GLuint vbo;		8
-;	GLuint ebo;		12
-;}
-
 section .rodata use32
 	print_int db "%d",10,0
 
@@ -34,138 +27,81 @@ section .rodata use32
 	dd 0.5, -0.5, 0.5,	0.0, 0.0, 0.0,
 	dd 0.5, -0.5, -0.5,	0.0, 0.0, 0.0,
 	dd -0.5, -0.5, -0.5,0.0, 0.0, 0.0,
-	dd -0.5, -0.5, 0.5,	0.0, 0.0, 0.0,
+	dd -0.5, -0.5, 0.5,	0.0, 0.0, 0.0
+	
+	vertices_no_colour:
+	dd -0.5, -0.5, 0.5,
+	dd -0.5, 0.5, 0.5,
+	dd 0.5, 0.5, 0.5,
+	dd 0.5, -0.5, 0.5,
+	dd -0.5, -0.5, 0.5,
+	dd -0.5, -0.5, -0.5,
+	dd -0.5, 0.5, -0.5,
+	dd -0.5, 0.5, 0.5,
+	dd 0.5, -0.5, -0.5,
+	dd 0.5, 0.5, -0.5,
+	dd -0.5, 0.5, -0.5,
+	dd -0.5, -0.5, -0.5,
+	dd 0.5, 0.5, 0.5,
+	dd 0.5, 0.5, -0.5,
+	dd 0.5, -0.5, -0.5,
+	dd 0.5, -0.5, 0.5,
+	dd -0.5, 0.5, 0.5,
+	dd -0.5, 0.5, -0.5,
+	dd 0.5, 0.5, -0.5,
+	dd 0.5, 0.5, 0.5,
+	dd 0.5, -0.5, 0.5,
+	dd 0.5, -0.5, -0.5,
+	dd -0.5, -0.5, -0.5,
+	dd -0.5, -0.5, 0.5
 	
 	indices:
-	dd 0,1,2,0,2,3,
-	dd 4,5,6,4,6,7,
-	dd 8,9,10,8,10,11,
-	dd 12,13,14,12,14,15,
-	dd 16,17,18,16,18,19,
-	dd 20,21,22,20,22,23
+	dd 1,0,2,2,0,3,
+	dd 5,4,6,6,4,7,
+	dd 9,8,10,10,8,11,
+	dd 13,12,14,14,12,15,
+	dd 17,16,18,18,16,19,
+	dd 21,20,22,22,20,23
 	
 	uniform_pv db "pv",0
 	
 section .text use32
 	
-	global kuba_create		;void kuba_create(struct kuba* buffer)
-	global kuba_destroy		;void kuba_destroy(struct kuba* buffer)
-	global kuba_render		;void kuba_render(struct kuba* buffer, GLuint program, struct mat4* pv)
+	global kuba_create		;Renderable* kuba_create()
+	global kuba_destroy		;void kuba_destroy(Renderable* kuba)
+	global kuba_render		;void kuba_render(Renderable* kuba, struct mat4* pv)
 	
 	extern my_printf
 	
-	extern glGenVertexArrays
-	extern glGenBuffers
-	extern glDeleteVertexArrays
-	extern glDeleteBuffers
-	
-	extern glBindVertexArray
-	extern glBindBuffer
-	
-	extern glBufferData
-	extern glVertexAttribPointer
-	extern glEnableVertexAttribArray
-	
-	extern glUniformMatrix4fv
-	extern glGetUniformLocation
-	
-	extern glDrawElements
-	extern glUseProgram
-	
-	extern glGetError
-	
-	extern GL_ARRAY_BUFFER
-	extern GL_ELEMENT_ARRAY_BUFFER
-	extern GL_STATIC_DRAW
-	extern GL_FLOAT
-	extern GL_UNSIGNED_INT
-	extern GL_TRUE
-	extern GL_FALSE
-	extern GL_TRIANGLES
+	extern renderable_create
+	extern renderable_destroy
+	extern renderable_render
+	extern RENDERABLE_ATTRIB_P3
 	
 kuba_create:
 	push ebp
 	mov ebp, esp
 	
-	sub esp, 4		;vao
-	sub esp, 4		;vbo
-	sub esp, 4		;ebo
+	sub esp, 16		;vector<vec3> vertices
+	sub esp, 16		;vector<int> indices
 	
-	;create vao
-	lea eax, [ebp-4]
+	;imitate a vector
+	mov dword[ebp-16], 24
+	mov dword[ebp-12], 24
+	mov dword[ebp-8], 12
+	mov dword[ebp-4], vertices_no_colour
+	
+	mov dword[ebp-32], 36
+	mov dword[ebp-28], 36
+	mov dword[ebp-24], 4
+	mov dword[ebp-20], indices
+	
+	lea eax, [ebp-16]
+	lea ecx, [ebp-32]
+	push dword[RENDERABLE_ATTRIB_P3]
+	push ecx
 	push eax
-	push 1
-	call [glGenVertexArrays]
-	
-	push dword[ebp-4]
-	call [glBindVertexArray]
-	
-	;create vbo and fill it with data
-	lea eax, [ebp-8]
-	push eax
-	push 1
-	call [glGenBuffers]
-	
-	push dword[ebp-8]
-	push dword[GL_ARRAY_BUFFER]
-	call [glBindBuffer]
-	
-	push dword[GL_STATIC_DRAW]
-	push vertices
-	push 576
-	push dword[GL_ARRAY_BUFFER]
-	call [glBufferData]
-	
-	push 0
-	push 24
-	push dword[GL_FALSE]
-	push dword[GL_FLOAT]
-	push 3
-	push 0
-	call [glVertexAttribPointer]		;pos
-	
-	push 12
-	push 24
-	push dword[GL_FALSE]
-	push dword[GL_FLOAT]
-	push 3
-	push 1
-	call [glVertexAttribPointer]		;colour
-	
-	push 0
-	call [glEnableVertexAttribArray]
-	push 1
-	call [glEnableVertexAttribArray]
-	
-	;create ebo and fill it up with data
-	lea eax, [ebp-12]
-	push eax
-	push 1
-	call [glGenBuffers]
-	
-	push dword[ebp-12]
-	push dword[GL_ELEMENT_ARRAY_BUFFER]
-	call [glBindBuffer]
-	
-	push dword[GL_STATIC_DRAW]
-	push indices
-	push 144
-	push dword[GL_ELEMENT_ARRAY_BUFFER]
-	call [glBufferData]
-	
-	
-	push 0
-	call [glBindVertexArray]
-	
-	;copy the data to the buffer
-	mov eax, dword[ebp+8]
-	
-	mov ecx, dword[ebp-4]
-	mov dword[eax], ecx
-	mov ecx, dword[ebp-8]
-	mov dword[eax+4], ecx
-	mov ecx, dword[ebp-12]
-	mov dword[eax+8], ecx
+	call renderable_create
 	
 	mov esp, ebp
 	pop ebp
@@ -175,18 +111,8 @@ kuba_destroy:
 	push ebp
 	mov ebp, esp
 	
-	mov eax, dword[ebp+8]
-	lea ecx, [eax+4]
-	lea edx, [eax+8]
-	push eax
-	push 1
-	push ecx
-	push 1
-	push edx
-	push 1
-	call [glDeleteBuffers]
-	call [glDeleteBuffers]
-	call [glDeleteVertexArrays]
+	push dword[ebp+8]
+	call renderable_destroy
 	
 	mov esp, ebp
 	pop ebp
@@ -197,39 +123,10 @@ kuba_render:
 	push ebp
 	mov ebp, esp
 	
-	sub esp, 4		;pv uniform location
-	
-	;use program
-	push dword[ebp+12]
-	call [glUseProgram]
-	
-	;get uniform location and set it
-	push uniform_pv
-	push dword[ebp+12]
-	call [glGetUniformLocation]
-	
-	push dword[ebp+16]
-	push dword[GL_TRUE]		;transpose it as my matrices are row major
-	push 1
-	push dword[ebp-4]
-	call [glUniformMatrix4fv]
-	
-	
-	;bind vao
-	mov eax, dword[ebp+8]		;buffer* in eax
-	push dword[eax]
-	call [glBindVertexArray]
-	
-	;draw
 	push 0
-	push dword[GL_UNSIGNED_INT]
-	push 36
-	push dword[GL_TRIANGLES]
-	call [glDrawElements]
-	
-	;unbind vao
-	push 0
-	call [glBindVertexArray]
+	push dword[ebp+12]		;pv
+	push dword[ebp+8]		;kuba
+	call renderable_render
 	
 	mov esp, ebp
 	pop ebp
