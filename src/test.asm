@@ -6,6 +6,9 @@
 %endmacro
 
 section .rodata use32
+	print_new_line db 10,0
+	print_int db "%d ",0
+
 	sus db "sus",0
 	mega db "mega",0
 	
@@ -47,6 +50,7 @@ section .text use32
 	extern hyperCube_create
 	extern hyperCube_intersectWithPlane
 	extern vec4_print
+	extern vec3_print
 	
 	extern vector_init
 	
@@ -66,9 +70,6 @@ section .text use32
 		call hyperPlane_getNormal
 		add esp, 8
 		
-		push hyperPlaneNormal
-		call vec4_print
-		add esp, 4
 		
 		;hypercube test
 		push 12
@@ -91,6 +92,43 @@ section .text use32
 		push hyperPlane
 		call hyperCube_intersectWithPlane
 		add esp, 16
+		
+		push esi		;save esi
+		mov esi, dword[hyperCube_vertices]
+		test_print_hc_vertices_loop_start:
+			mov eax, hyperCube_vertices
+			mov eax, dword[eax+12]
+			mov ecx, esi
+			dec ecx
+			imul ecx, 12
+			add eax, ecx
+			push eax
+			call vec3_print
+			add esp, 4
+			
+			dec esi
+			test esi, esi
+			jnz test_print_hc_vertices_loop_start
+		pop esi			;restore esi
+		
+		push esi		;save esi
+		mov esi, dword[hyperCube_indices]
+		test_print_hc_indices_loop_start:
+			mov eax, hyperCube_indices
+			mov eax, dword[eax+12]
+			lea eax, [eax+4*esi-4]
+			push dword[eax]
+			push print_int
+			call my_printf
+			add esp, 8
+			
+			dec esi
+			test esi, esi
+			jnz test_print_hc_indices_loop_start
+		push print_new_line
+		call my_printf
+		add esp, 4
+		pop esi			;restore esi
 		
 		;create window and opengl context
 		push sus

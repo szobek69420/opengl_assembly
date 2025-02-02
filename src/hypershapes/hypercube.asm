@@ -8,6 +8,7 @@
 
 ;side order: +z, -x, -z, +x, +y, -y, +w, -w
 section .rodata use32
+	EPSILON dd 0.000001
 	ZERO dd 0.0
 	ONE dd 1.0
 
@@ -232,11 +233,11 @@ hyperCube_cellIntersection:
 	
 	sub esp, 128	;scaled and rotated cell vertices							-136
 	
-	sub esp, 16		;helper (edge[1]-edge[0])									-152
-	sub esp, 16		;helper2 (planePoint-edge[0])								-168
-	sub esp, 4		;helper3 ( |edge[1]-edge[0]| )								-172
-	sub esp, 4		;helper4 ( <edge[1]-edge[0]; normalizedPlaneNormal> )		-176
-	sub esp, 4		;helper5 ( <planePoint-edge[0]; normalizedPlaneNormal> )	-180
+	sub esp, 16		;helper1 (edge[0]-planePoint)								-152
+	sub esp, 16		;helper2 (edge[1]-planePoint)								-168
+	sub esp, 4		;helper3 ( <edge[0]-planePoint; normalizedPlaneNormal> )	-172
+	sub esp, 4		;helper4 ( <edge[1]-planePoint; normalizedPlaneNormal> )	-176
+	sub esp, 4		;helper5 ( |helper1| / (|helper1| + |helper2|) )			-180
 	
 	sub esp, 16		;helper6 ( intersection point in 4D)						-196
 	sub esp, 12		;helper7 ( intersection point 3D projection )				-208
@@ -292,94 +293,113 @@ hyperCube_cellIntersection:
 	mov edi, edgeIndices				;current index
 	
 	hyperCube_cellIntersection_intersect_loop_start:
+		push dword[ebp+16]		;plane point
 		mov eax, dword[edi]
 		shl eax, 4
 		lea eax, [eax+ebp-136]
-		push eax
-		
-		mov eax, dword[edi+4]
-		shl eax, 4
-		lea eax, [eax+ebp-136]
-		push eax
-		
-		lea eax, [ebp-152]		;helper1
-		push eax
+		push eax				;edge[0]
+		lea eax, [ebp-152]
+		push eax				;helper1
 		call vec4_sub
 		
-		call vec4_magnitude
+		push dword[ebp+28]		;plane normal
+		call vec4_dot
 		fstp dword[ebp-172]		;helper3
-		
-		push dword[ebp+28]		;normalizedPlaneNormal
-		call vec4_dot
-		fstp dword[ebp-176]		;helper4
-		
-		add esp, 12		;&edge[0] is left on the stack
-		
-		push dword[ebp+16]		;plane point
-		lea eax, [ebp-168]		;helper2
-		push eax
-		call vec4_sub
-		
-		push dword[ebp+28]		;normalizedPlaneNormal
-		call vec4_dot
-		fstp dword[ebp-180]		;helper5
 		add esp, 16
 		
 		
-		;if the sign of helper4 and helper5 differs, the point is definitely not on the plane
-		mov eax, dword[ebp-180]	;helper5
+		push dword[ebp+16]		;plane point
+		mov eax, dword[edi+4]
+		shl eax, 4
+		lea eax, [eax+ebp-136]
+		push eax				;edge[1]
+		lea eax, [ebp-168]
+		push eax				;helper2
+		call vec4_sub
+		
+		push dword[ebp+28]		;plane normal
+		call vec4_dot
+		fstp dword[ebp-176]		;helper4
+		add esp, 16
+		
+		
+		
+		;if the sign of helper3 and helper4 is the same, then the point is not on the plane
+		mov eax, dword[ebp-176]	;helper4
 		and eax, 0x80000000
-		mov ecx, dword[ebp-176]	;helper4
+		mov ecx, dword[ebp-172]	;helper3
 		and ecx, 0x80000000
 		xor eax, ecx
 		test eax, eax
-		jnz hyperCube_cellIntersection_intersect_loop_continue
+		jz hyperCube_cellIntersection_intersect_loop_continue
 		
+		;remove the signs of helper3 and helper4
+		and dword[ebp-172], 0x7fffffff		;|helper3|
+		and dword[ebp-176], 0x7fffffff		;|helper4|
 		
-		;if |helper4| >=|helper5|, then the point is not on the line either
-		mov eax, dword[ebp-180]
-		and eax, 0x80000000
-		cmp ecx, eax
-		jge hyperCube_cellIntersection_intersect_loop_continue
-			;calculate the 3d projection of the point and add it to the vector
-			
-			mov dword[ebp-176], ecx		;|helper4|
-			mov dword[ebp-180], eax		;|helper5|
-			
-			movss xmm0, dword[ebp-176]
-			movss xmm1, dword[ebp-180]
-			divss xmm0, xmm1
-			
-			lea ecx, [ebp-196]
-			sub esp, 4
-			movss dword[esp], xmm0
-			lea eax, [ebp-152]		;helper1
-			push eax
-			push ecx				;helper6
-			call vec4_scale
-			pop ecx		;restore ecx
-			
+		;is edge[1]-edge[0] too short?
+		movss xmm0, dword[ebp-172]
+		movss xmm1, dword[ebp-176]
+		
+		movss xmm2, xmm1
+		addss xmm2, xmm0
+		
+		ucomiss xmm2, dword[EPSILON]
+		jbe hyperCube_cellIntersection_intersect_loop_continue
+			;calculate helper5 (we already have |helper1|+|helper2| in xmm2 here
+			movss xmm3, xmm0		;helper3 in xmm3
+			divss xmm3, xmm2
+			movss dword[ebp-180], xmm3
+		
+			;calculate the 3d projection of the point and add it to the vector			
 			mov eax, dword[edi]
 			shl eax, 4
 			lea eax, [eax+ebp-136]
-			push eax		;edge[0]
+			push eax				;edge[0]
+			mov eax, dword[edi+4]
+			shl eax, 4
+			lea eax, [eax+ebp-136]
+			push eax				;edge[1]
+			lea ecx, [ebp-196]
+			push ecx				;helper6
+			call vec4_sub
+		
+			
+			push dword[ebp-180]		;helper5
+			lea ecx, [ebp-196]
+			push ecx
+			push ecx
+			call vec4_scale
+			
+			add esp, 20			;leave edge[0] on the stack
+			
+			lea ecx, [ebp-196]
 			push ecx
 			push ecx
 			call vec4_add
-			
+			add esp, 12
+		
+		
+			lea ecx, [ebp-196]
+			push ecx			;helper6
 			mov eax, dword[ebp+16]
-			add eax, 16		;hyperplane direction 1
+			add eax, 16			;hyperplane direction 1
 			push eax
 			call vec4_dot
 			fstp dword[ebp-208]
-			add dword[esp], 16
+			add esp, 4
+			mov eax, dword[ebp+16]
+			add eax, 32			;hyperplane direction 2
+			push eax
 			call vec4_dot
 			fstp dword[ebp-204]
-			add dword[esp], 16
+			add esp, 4
+			mov eax, dword[ebp+16]
+			add eax, 48			;hyperplane direction 3
+			push eax
 			call vec4_dot
 			fstp dword[ebp-200]
-			
-			add esp, 36
+			add esp, 8
 			
 			
 			inc dword[ebp-8]		;increment index count
@@ -390,7 +410,6 @@ hyperCube_cellIntersection:
 			push dword[ebp+32]		;vertices
 			call vector_push_back
 			add esp, 16
-			
 			
 		hyperCube_cellIntersection_intersect_loop_continue:
 		add edi, 8
