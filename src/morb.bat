@@ -2,7 +2,6 @@ cls
 mkdir build
 nasm -fobj test.asm -o build/test.o
 nasm -fobj window/window.asm -o build/window.o
-nasm -fobj player/player.asm -o build/player.o
 nasm -fobj game_loop/game_loop.asm -o build/game_loop.o
 nasm -fobj camera/camera.asm -o build/camera.o
 nasm -fobj input/input.asm -o build/input.o
@@ -22,6 +21,7 @@ nasm -fobj glm3/mat4.asm -o build/mat4.o
 nasm -fobj player/player.asm -o build/player.o
 nasm -fobj hypershapes/hyperplane.asm -o build/hyperplane.o
 nasm -fobj hypershapes/hypercube.asm -o build/hypercube.o
+nasm -fobj renderable/renderable.asm -o build/renderable.o
 alink.exe -subsys console -oPE ^
 build/test.o ^
 build/window.o ^
@@ -30,6 +30,7 @@ build/game_loop.o ^
 build/camera.o ^
 build/input.o ^
 build/glfw.o ^
+build/renderable.o ^
 build/opengl.o ^
 build/shader.o ^
 build/kuba.o ^

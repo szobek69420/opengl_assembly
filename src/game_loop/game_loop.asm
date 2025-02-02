@@ -85,6 +85,12 @@ section .text use32
 	extern player_destroy
 	extern player_update
 	
+	extern renderable_init
+	extern renderable_deinit
+	extern renderable_create
+	extern renderable_destroy
+	extern RENDERABLE_ATTRIB_P3
+	
 game_loop:
 	push ebp
 	mov ebp, esp

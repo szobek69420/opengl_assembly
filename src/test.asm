@@ -33,6 +33,8 @@ section .bss use32
 	hyperCube resb 80
 	hyperCube_vertices resb 16
 	hyperCube_indices resb 16
+	
+	renderable resb 56
 
 section .text use32
 	
