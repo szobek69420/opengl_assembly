@@ -5,10 +5,10 @@ layout (location=1) in vec3 aColour;
 out vec3 colour;
 
 uniform mat4 pv;
+uniform mat4 model;
 
 void main()
 {
-	gl_Position=pv*vec4(aPos, 1.0);
-
 	colour=aColour;
+	gl_Position=pv*model*vec4(aPos, 1.0);
 }

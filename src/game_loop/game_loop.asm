@@ -9,10 +9,14 @@ section .rodata use32
 	ZERO dd 0.0
 	ONE dd 1.0
 	ONE_PER_THOUSAND dd 0.001
+	P15 dd 0.15
+	P6 dd 0.6
 	
 	test_text db "skibidi lidl",10,0
 	print_int db "%d",10,0
 	print_two_ints db "%d %d",10,0
+	print_float db "%f",0
+	print_new_line db 10,0
 	
 section .bss use32
 	pkuba resb 4
@@ -23,6 +27,12 @@ section .bss use32
 	pplayer resb 4
 	
 	helper resb 4
+	
+	hyperPlane resb 64
+	hyperCube resb 80
+	hyperCube_vertices resb 16
+	hyperCube_indices resb 16
+	hyperCube_renderable resb 4
 	
 section .data use32
 	last_frame_milliseconds dd 0		;int, the GetTickCount of the last frame
@@ -46,12 +56,7 @@ section .text use32
 	extern GL_DEPTH_BUFFER_BIT
 	extern GL_CULL_FACE
 	extern GL_CCW
-	
-	extern shader_import
-	
-	extern kuba_create
-	extern kuba_destroy
-	extern kuba_render
+	extern GL_POINTS
 
 	
 	extern camera_init
@@ -87,6 +92,19 @@ section .text use32
 	
 	extern renderable_init
 	extern renderable_deinit
+	extern renderable_render
+	extern renderable_create
+	extern renderable_destroy
+	extern renderable_setPrimitive
+	extern RENDERABLE_ATTRIB_P3C3
+
+	extern hyperPlane_create
+	extern hyperCube_create
+	extern hyperCube_intersectWithPlane
+	
+	extern vector_init
+	
+	extern vec3_print
 	
 game_loop:
 	push ebp
@@ -144,10 +162,64 @@ game_loop:
 	mov dword[pplayer], eax
 	add esp, 4
 	
+	;construct hypercube cross section
+	push hyperPlane
+	call hyperPlane_create
+	add esp, 4
 	
-	;create kuba
-	call kuba_create
-	mov dword[pkuba], eax
+	push hyperCube
+	call hyperCube_create
+	add esp, 4
+	
+	push 4		;vector<float>
+	push hyperCube_vertices
+	call vector_init
+	add esp, 8
+	push 4		;vector<int>
+	push hyperCube_indices
+	call vector_init
+	add esp, 8
+	
+	push hyperCube_indices
+	push hyperCube_vertices
+	push hyperCube
+	push hyperPlane
+	call hyperCube_intersectWithPlane
+	add esp, 16
+	
+	push dword[RENDERABLE_ATTRIB_P3C3]
+	push hyperCube_indices
+	push hyperCube_vertices
+	call renderable_create
+	mov dword[hyperCube_renderable], eax
+	add esp, 12
+	
+	push esi		;save esi
+	push edi		;save edi
+	mov esi, dword[hyperCube_vertices]
+	mov edi, hyperCube_vertices
+	mov edi, dword[edi+12]
+	sugus2:
+		push edi
+		call vec3_print
+		add esp, 4
+		
+		lea eax, [edi+12]
+		push eax
+		call vec3_print
+		add esp, 4
+		
+		push print_new_line
+		call my_printf
+		add esp, 4
+		
+		add edi, 24
+		sub esi, 6
+		test esi, esi
+		jnz sugus2
+	pop edi			;restore edi
+	pop esi			;restore esi
+	
 	
 	;enable depth test and face cull
 	push dword[GL_DEPTH_TEST]
@@ -188,9 +260,9 @@ game_loop:
 	
 		;set clear color
 		push dword[ONE]
-		push dword[ONE]
+		push dword[P6]
 		push dword[ZERO]
-		push dword[ZERO]
+		push dword[P15]
 		call [glClearColor]
 		
 		
@@ -207,10 +279,11 @@ game_loop:
 		add esp, 8
 		
 		;render kuba
+		push 0
 		push pv_matrix
-		push dword[pkuba]
-		call kuba_render
-		add esp, 8
+		push dword[hyperCube_renderable]
+		call renderable_render
+		add esp, 12
 		
 		;swap buffers
 		push dword[ebp-4]
@@ -241,9 +314,9 @@ game_loop:
 		jz game_loop_loop_start
 		
 		
-	;destroy kuba
-	push dword[pkuba]
-	call kuba_destroy
+	;destroy hypercube renderable
+	push dword[hyperCube_renderable]
+	call renderable_destroy
 	add esp, 4
 	
 	;destroy player

@@ -18,6 +18,16 @@ section .rodata use32
 	
 	print_int db "%d",10,0
 	
+	cellColours:
+	dd 1.0,1.0,1.0
+	dd 1.0,0.0,0.0
+	dd 0.0,1.0,0.0
+	dd 0.0,0.0,1.0
+	dd 1.0,1.0,0.0
+	dd 1.0,0.0,1.0
+	dd 0.0,1.0,1.0
+	dd 0.0,0.0,0.0
+	
 	;vec4 pos, vec2 uv
 	cell0:	;+z
 	dd -0.5,-0.5,0.5,0.5,	0.0,0.0,
@@ -102,7 +112,7 @@ section .rodata use32
 section .text use32
 
 	global hyperCube_create		;void hyperCube_create(HyperCube* buffer)
-	global hyperCube_intersectWithPlane		;void hyperCube_iwp(HyperPlane* plane, HyperCube* pcube, vector<vec3>* vertexBuffer, vector<int>* indexBuffer)
+	global hyperCube_intersectWithPlane		;void hyperCube_iwp(HyperPlane* plane, HyperCube* pcube, vector<float>* vertexBuffer, vector<int>* indexBuffer)
 	
 	extern my_memcpy
 	extern my_memset_dword
@@ -217,7 +227,7 @@ hyperCube_intersectWithPlane:
 ;	HyperCube* pcube, 
 ;	int cellIndex, 
 ;	vec4* normalizedPlaneNormal, 
-;	vector<vec3>* vertices, 
+;	vector<float>* vertices, 
 ;	vector<int>* indices
 ;)
 ;vertex and index buffers should be at least 6 elements long
@@ -242,11 +252,28 @@ hyperCube_cellIntersection:
 	sub esp, 16		;helper6 ( intersection point in 4D)						-196
 	sub esp, 12		;helper7 ( intersection point 3D projection )				-208
 	
+	sub esp, 12		;cell colour												-220
+	
 	mov eax, dword[ebp+32]
 	mov eax, dword[eax]
+	xor edx, edx
+	mov ecx, 6			;6 floats per vertex
+	div ecx
 	mov dword[ebp-4], eax
 	
 	mov dword[ebp-8], 0
+	
+	;get cell colour
+	mov eax, dword[ebp+24]
+	imul eax, 12
+	add eax, cellColours
+	
+	mov ecx, dword[eax]
+	mov dword[ebp-220], ecx
+	mov ecx, dword[eax+4]
+	mov dword[ebp-216], ecx
+	mov ecx, dword[eax+8]
+	mov dword[ebp-212], ecx
 	
 	;copy the vertex data
 	lea eax, [ebp-136]
@@ -404,12 +431,29 @@ hyperCube_cellIntersection:
 			
 			inc dword[ebp-8]		;increment index count
 			
-			push dword[ebp-200]
-			push dword[ebp-204]
+			;add vertex position
 			push dword[ebp-208]
 			push dword[ebp+32]		;vertices
 			call vector_push_back
-			add esp, 16
+			mov eax, dword[ebp-204]
+			mov dword[esp+4], eax
+			call vector_push_back
+			mov eax, dword[ebp-200]
+			mov dword[esp+4], eax
+			call vector_push_back
+			add esp, 8
+			
+			;add vertex colour
+			push dword[ebp-220]
+			push dword[ebp+32]		;vertices
+			call vector_push_back
+			mov eax, dword[ebp-216]
+			mov dword[esp+4], eax
+			call vector_push_back
+			mov eax, dword[ebp-212]
+			mov dword[esp+4], eax
+			call vector_push_back
+			add esp, 8
 			
 		hyperCube_cellIntersection_intersect_loop_continue:
 		add edi, 8
@@ -436,7 +480,6 @@ hyperCube_cellIntersection:
 		add esp, 8
 		
 		mov eax, esi
-		add eax, 1
 		add eax, dword[ebp-4]
 		push eax
 		push dword[ebp+36]
@@ -444,7 +487,7 @@ hyperCube_cellIntersection:
 		add esp, 8
 	
 		mov eax, esi
-		add eax, 2
+		add eax, 1
 		add eax, dword[ebp-4]
 		push eax
 		push dword[ebp+36]
@@ -459,6 +502,7 @@ hyperCube_cellIntersection:
 		
 	hyperCube_cellIntersect_remove_added_vertices:
 		mov esi, dword[ebp-8]		;index count in esi
+		imul esi, 6					;6 floats per vertex attrib
 		test esi, esi
 		jz hyperCube_cellIntersect_end
 		hyperCube_cellIntersect_remove_vertices_loop_start:

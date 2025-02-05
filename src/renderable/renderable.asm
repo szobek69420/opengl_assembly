@@ -25,6 +25,9 @@ section .rodata
 	vertex_shader_p3 db "shaders/p3.vag",0
 	fragment_shader_p3 db "shaders/p3.fag",0
 	
+	vertex_shader_p3c3 db "shaders/p3c3.vag",0
+	fragment_shader_p3c3 db "shaders/p3c3.fag",0
+	
 	uniform_name_pv db "pv",0
 	uniform_name_model db "model",0
 	
@@ -38,17 +41,21 @@ section .rodata
 section .data use32
 	renderable_initialized dd 0
 	shader_p3 dd 0
+	shader_p3c3 dd 0
+	
+	renderable_primitive dd 0
 	
 section .text use32
 
 	global renderable_init				;void renderable_init()		//initializes the components of the renderable handler
 	global renderable_deinit			;void renderable_deinit()	//undoes renderable_init
 	
-	global renderable_create			;Renderable* renderable_create(vector<vec3>* vertices, vector<int>* indices, int vertexAttribLayout)
+	global renderable_create			;Renderable* renderable_create(vector<float>* vertices, vector<int>* indices, int vertexAttribLayout)
 	global renderable_destroy			;void renderable_destroy(Renderable* renderable)
 	
 	global renderable_render			;void renderable_render(Renderable* renderable, mat4* pv, GLuint texture)
 	
+	global renderable_setPrimitive		;void renderable_setPrimitive(GLuint primitive)
 	
 	
 	extern glGenVertexArrays
@@ -91,6 +98,7 @@ renderable_init:
 	push ebp
 	mov ebp, esp
 	
+	;import shaders
 	push 0
 	push fragment_shader_p3
 	push vertex_shader_p3
@@ -98,7 +106,19 @@ renderable_init:
 	mov dword[shader_p3], eax
 	add esp, 12
 	
+	push 0
+	push fragment_shader_p3c3
+	push vertex_shader_p3c3
+	call shader_import
+	mov dword[shader_p3c3], eax
+	add esp, 12
 	
+	;init other values
+	mov eax, dword[GL_TRIANGLES]
+	mov dword[renderable_primitive], eax
+	
+	
+	;gg
 	mov dword[renderable_initialized], 69
 	
 	mov esp, ebp
@@ -112,7 +132,13 @@ renderable_deinit:
 	
 	mov dword[renderable_initialized], 0
 	
+	
+	;obliterate shaders
 	push dword[shader_p3]
+	call shader_destroy
+	add esp, 4
+	
+	push dword[shader_p3c3]
 	call shader_destroy
 	add esp, 4
 	
@@ -186,11 +212,12 @@ renderable_create:
 	push dword[GL_ARRAY_BUFFER]
 	call [glBindBuffer]
 	
+	
 	push dword[GL_STATIC_DRAW]
 	mov eax, dword[ebp+8]
 	push dword[eax+12]			;vertices
 	mov eax, dword[eax]
-	imul eax, 12
+	imul eax, 4
 	push eax					;sizeof(vertices)
 	push dword[GL_ARRAY_BUFFER]
 	call [glBufferData]
@@ -204,7 +231,7 @@ renderable_create:
 	mov eax, dword[ebp+12]
 	push dword[eax+12]			;indices
 	mov eax, dword[eax]
-	imul eax, 12
+	shl eax, 2
 	push eax					;sizeof(indices)
 	push dword[GL_ELEMENT_ARRAY_BUFFER]
 	call [glBufferData]
@@ -213,8 +240,11 @@ renderable_create:
 	mov eax, dword[ebp+16]		;attrib layout in eax
 	cmp eax, dword[RENDERABLE_ATTRIB_P3]
 	je renderable_create_attrib_p3
+	cmp eax, dword[RENDERABLE_ATTRIB_P3C3]
+	je renderable_create_attrib_p3c3
 	jmp renderable_create_attrib_done
 	renderable_create_attrib_p3:
+	
 		push 0
 		push 12
 		push dword[GL_FALSE]
@@ -225,6 +255,31 @@ renderable_create:
 		
 		push 0
 		call [glEnableVertexAttribArray]
+		jmp renderable_create_attrib_done
+		
+	renderable_create_attrib_p3c3:
+		
+		push 0
+		push 24
+		push dword[GL_FALSE]
+		push dword[GL_FLOAT]
+		push 3
+		push 0
+		call [glVertexAttribPointer]
+		
+		push 12
+		push 24
+		push dword[GL_FALSE]
+		push dword[GL_FLOAT]
+		push 3
+		push 1
+		call [glVertexAttribPointer]
+		
+		push 0
+		call [glEnableVertexAttribArray]
+		push 1
+		call [glEnableVertexAttribArray]
+		
 		jmp renderable_create_attrib_done
 	
 	renderable_create_attrib_done:
@@ -297,6 +352,8 @@ renderable_render:
 	mov eax, dword[eax+52]
 	cmp eax, dword[RENDERABLE_ATTRIB_P3]
 	je renderable_render_bind_texture_done
+	cmp eax, dword[RENDERABLE_ATTRIB_P3C3]
+	je renderable_render_bind_texture_done
 		;set texture
 	renderable_render_bind_texture_done:
 	
@@ -305,12 +362,23 @@ renderable_render:
 	mov eax, dword[eax+52]
 	cmp eax, dword[RENDERABLE_ATTRIB_P3]
 	je renderable_render_shader_p3
+	cmp eax, dword[RENDERABLE_ATTRIB_P3C3]
+	je renderable_render_shader_p3c3
 	jmp renderable_render_end
+	
 	renderable_render_shader_p3:
 		push dword[shader_p3]
 		call [glUseProgram]
 		
 		mov eax, dword[shader_p3]
+		mov dword[ebp-4], eax
+		jmp renderable_render_shader_done
+		
+	renderable_render_shader_p3c3:
+		push dword[shader_p3c3]
+		call [glUseProgram]
+		
+		mov eax, dword[shader_p3c3]
 		mov dword[ebp-4], eax
 		jmp renderable_render_shader_done
 		
@@ -354,7 +422,7 @@ renderable_render:
 	push dword[GL_UNSIGNED_INT]
 	mov eax, dword[ebp+8]
 	push dword[eax+12]
-	push dword[GL_TRIANGLES]
+	push dword[renderable_primitive]
 	call [glDrawElements]
 	
 	push 0
@@ -433,4 +501,10 @@ renderable_calculateModel:
 	
 	mov esp, ebp
 	pop ebp
+	ret
+	
+	
+renderable_setPrimitive:
+	mov eax, dword[esp+4]
+	mov dword[renderable_primitive], eax
 	ret
