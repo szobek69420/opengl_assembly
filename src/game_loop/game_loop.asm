@@ -201,16 +201,16 @@ game_loop:
 	mov edi, dword[edi+12]
 	sugus2:
 		push edi
-		call vec3_print
+		;call vec3_print
 		add esp, 4
 		
 		lea eax, [edi+12]
 		push eax
-		call vec3_print
+		;call vec3_print
 		add esp, 4
 		
 		push print_new_line
-		call my_printf
+		;call my_printf
 		add esp, 4
 		
 		add edi, 24

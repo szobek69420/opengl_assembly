@@ -17,6 +17,7 @@ section .rodata use32
 	edgeIndexCount dd 24
 	
 	print_int db "%d",10,0
+	print_new_line db 10,0
 	
 	cellColours:
 	dd 1.0,1.0,1.0
@@ -119,6 +120,13 @@ section .text use32
 	
 	extern my_printf
 	
+	extern vec3_add
+	extern vec3_sub
+	extern vec3_scale
+	extern vec3_dot
+	extern vec3_cross
+	extern vec3_print
+	
 	extern vec4_add
 	extern vec4_sub
 	extern vec4_dot
@@ -164,8 +172,16 @@ hyperCube_intersectWithPlane:
 	push esi
 	mov ebp, esp
 	
-	sub esp, 64		;translated plane
-	sub esp, 16		;normalizedPlaneNormal
+	sub esp, 64		;translated plane											-64
+	sub esp, 16		;normalizedPlaneNormal										-80
+	
+	sub esp, 12		;center of the shape in 3D									-92
+	sub esp, 12		;triangle[1]-triangle[0]									-104
+	sub esp, 12		;triangle[2]-triangle[0]									-116
+	sub esp, 12		;(triangle[1]-triangle[0]) x (triangle[2]-triangle[0])		-128
+	sub esp, 12		;triangle[0]-center											-140
+	sub esp, 4		; <triangle[0]-center; (triangle[1]-triangle[0]) x (triangle[2]-triangle[0])>	-144
+	
 	
 	;translate plane
 	lea eax, [ebp-64]
@@ -198,7 +214,7 @@ hyperCube_intersectWithPlane:
 	
 	;calculate intersection points
 	mov esi, 8		;number of cells
-	hyperPlane_intersectWithPlane_loop_start:
+	hyperCube_intersectWithPlane_loop_start:
 		push dword[ebp+24]		;index buffer
 		push dword[ebp+20]		;vertex buffer
 		lea eax, [ebp-80]
@@ -213,8 +229,134 @@ hyperCube_intersectWithPlane:
 		
 		dec esi
 		test esi, esi
-		jnz hyperPlane_intersectWithPlane_loop_start
+		jnz hyperCube_intersectWithPlane_loop_start
 	
+	;calculate the (non-weighted) center of the shape
+	mov dword[ebp-92], 0
+	mov dword[ebp-88], 0
+	mov dword[ebp-84], 0
+	
+	
+	mov esi, dword[ebp+20]
+	mov esi, dword[esi]			;vertex float count in esi
+	test esi, esi
+	jz hyperCube_intersectWithPlane_end
+	push edi		;save edi
+	mov edi, dword[ebp+20]
+	mov edi, dword[edi+12]		;vertices in edi
+	
+	hyperCube_intersectWithPlane_center_loop_start:
+		lea eax, [ebp-92]
+		push edi
+		push eax
+		push eax
+		call vec3_add
+		add esp, 12
+		
+		add edi, 24			;24 bytes/vertex attrib
+		sub esi, 6
+		cmp esi, 0
+		jg hyperCube_intersectWithPlane_center_loop_start
+	pop edi			;restore edi
+	
+	mov eax, dword[ebp+20]
+	mov eax, dword[eax]
+	xor edx, edx
+	mov ecx, 6
+	div ecx
+	
+	push eax
+	fld1
+	fild dword[esp]
+	fdivp
+	fstp dword[esp]
+	lea eax, [ebp-92]
+	push eax
+	push eax
+	call vec3_scale
+	add esp, 12
+	
+	;flip the triangles that are facing towards the center
+	push ebx		;save ebx
+	push edi		;save edi
+	mov ebx, dword[ebp+20]
+	mov ebx, dword[ebx+12]		;vertices in ebx
+	
+	mov esi, dword[ebp+24]
+	mov edi, dword[esi+12]		;indices in edi
+	mov esi, dword[esi]			;index count in esi
+	hyperCube_intersectWithPlane_flip_loop_start:
+		lea eax, [ebp-92]
+		push eax		;center
+	
+		mov eax, dword[edi]
+		imul eax, 24
+		add eax, ebx
+		push eax		;triangle[0]
+		
+		lea eax, [ebp-140]
+		push eax
+		call vec3_sub
+		add esp, 4		;triangle[0] and center stay on the stack
+		
+		mov eax, dword[edi+4]
+		imul eax, 24
+		add eax, ebx
+		push eax		;triangle[1]
+	
+		lea eax, [ebp-104]
+		push eax
+		call vec3_sub
+		add esp, 8		;triangle[0] and center stay on the stack
+		
+		
+		mov eax, dword[edi+8]
+		imul eax, 24
+		add eax, ebx
+		push eax		;triangle[2]
+		
+		lea eax, [ebp-116]
+		push eax
+		call vec3_sub
+		add esp, 16
+		
+		lea eax, [ebp-116]
+		push eax
+		lea eax, [ebp-104]
+		push eax
+		lea eax, [ebp-128]
+		push eax
+		call vec3_cross
+		add esp, 12
+		
+		lea eax, [ebp-128]
+		push eax
+		lea eax, [ebp-140]
+		push eax
+		call vec3_dot
+		fstp dword[ebp-144]
+		add esp, 8
+		
+		;flip the face if necessary
+		mov eax, dword[ebp-144]
+		and eax, 0x80000000
+		test eax, eax
+		jz hyperCube_intersectWithPlane_flip_loop_continue
+			mov eax, dword[edi]
+			mov ecx, dword[edi+4]
+			mov dword[edi], ecx
+			mov dword[edi+4], eax
+			
+		hyperCube_intersectWithPlane_flip_loop_continue:
+		add edi, 12
+		sub esi, 3
+		cmp esi, 0
+		jg hyperCube_intersectWithPlane_flip_loop_start
+		
+	pop edi			;restore edi
+	pop ebx			;restore ebx
+	
+	hyperCube_intersectWithPlane_end:
 	mov esp, ebp
 	pop esi
 	pop ebp
@@ -460,6 +602,8 @@ hyperCube_cellIntersection:
 		sub esi, 2
 		test esi, esi
 		jnz hyperCube_cellIntersection_intersect_loop_start
+		
+	;sort the vertex values so that the are in the correct order to form a polygon
 		
 		
 	
