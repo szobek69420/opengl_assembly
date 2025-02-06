@@ -4,13 +4,17 @@
 ;struct HyperCube{
 ;	vec4 position;			0
 ;	mat4 otherTransforms;	16
-;}		overall 80 bytes
+;	float rotXY, rotYZ, rotXZ, rotXW, rotYW, rotZW;		80
+;}		overall 104 bytes
+;the rotations are in radians
 
 ;side order: +z, -x, -z, +x, +y, -y, +w, -w
 section .rodata use32
 	EPSILON dd 0.000001
 	ZERO dd 0.0
 	ONE dd 1.0
+	
+	rotation_speed dd 5.0
 
 	edgeIndices:
 	dd 0,1, 1,2, 2,3, 3,0, 4,5, 5,6, 6,7, 7,4, 0,4, 1,5, 2,6, 3,7
@@ -18,6 +22,7 @@ section .rodata use32
 	
 	print_int db "%d",10,0
 	print_new_line db 10,0
+	print_test db "feliz navidad",10,0
 	
 	cellColours:
 	dd 1.0,1.0,1.0
@@ -115,6 +120,8 @@ section .text use32
 	global hyperCube_create		;void hyperCube_create(HyperCube* buffer)
 	global hyperCube_intersectWithPlane		;void hyperCube_iwp(HyperPlane* plane, HyperCube* pcube, vector<float>* vertexBuffer, vector<int>* indexBuffer)
 	
+	global hyperCube_update			;void hyperCube_update(HyperCube* pcube, float deltaTime)
+	
 	extern my_memcpy
 	extern my_memset_dword
 	
@@ -125,6 +132,7 @@ section .text use32
 	extern vec3_scale
 	extern vec3_dot
 	extern vec3_cross
+	extern vec3_normalize
 	extern vec3_print
 	
 	extern vec4_add
@@ -143,12 +151,24 @@ section .text use32
 	
 	extern hyperPlane_getNormal
 	
+	extern input_keyHeld
+	extern GLFW_KEY_1
+	extern GLFW_KEY_2
+	extern GLFW_KEY_3
+	extern GLFW_KEY_4
+	extern GLFW_KEY_5
+	extern GLFW_KEY_6
+	
+	extern mat4_init
+	extern mat4_mul
+	extern mat4_print
+	
 hyperCube_create:
 	push ebp
 	mov ebp, esp
 	
 
-	push 80
+	push 104
 	push 0
 	push dword[ebp+8]
 	call my_memset_dword
@@ -396,6 +416,12 @@ hyperCube_cellIntersection:
 	
 	sub esp, 12		;cell colour												-220
 	
+	sub esp, 12		;face normal												-232
+	sub esp, 12		;normalize(vertex[outerIndex] - vertex[0])					-244
+	sub esp, 12		; [ebp-232] x [ebp-244]										-256
+	sub esp, 12		;normalize(vertex[innerIndex] - vertex[0])					-268
+	sub esp, 4		;current min dot											-272
+	
 	mov eax, dword[ebp+32]
 	mov eax, dword[eax]
 	xor edx, edx
@@ -444,7 +470,7 @@ hyperCube_cellIntersection:
 	lea eax, [ebp-136]
 	mov ecx, dword[ebp+20]
 	lea ecx, [ecx+16]		;address of the transform matrix
-	mov edx, 8
+	mov esi, 8
 	
 	push ecx
 	push eax
@@ -452,8 +478,8 @@ hyperCube_cellIntersection:
 		call vec4_mulWithMat
 		
 		add dword[esp], 16
-		dec edx
-		test edx, edx
+		dec esi
+		test esi, esi
 		jnz hyperCube_cellIntersection_transform_loop_start
 	add esp, 8
 	
@@ -603,9 +629,6 @@ hyperCube_cellIntersection:
 		test esi, esi
 		jnz hyperCube_cellIntersection_intersect_loop_start
 		
-	;sort the vertex values so that the are in the correct order to form a polygon
-		
-		
 	
 	;check if the index count is valid
 	mov eax, dword[ebp-8]
@@ -614,7 +637,33 @@ hyperCube_cellIntersection:
 	cmp eax, 6
 	jg hyperCube_cellIntersect_remove_added_vertices
 	
-	;add indices (NOT FINAL!!!!)
+	
+	;triangulate the face
+	;calculate the normal of the face
+	mov eax, dword[ebp+32]
+	mov ecx, dword[ebp-4]
+	imul ecx, 24
+	add ecx, dword[eax+12]
+	push ecx					;vertex[0]
+	add ecx, 24
+	push ecx					;vertex[1]
+	lea ecx, [ebp-232]
+	push ecx
+	call vec3_sub
+	add dword[esp+4], 24
+	sub dword[esp], 12
+	call vec3_sub
+	add esp, 12
+	
+	lea ecx, [ebp-244]
+	push ecx
+	lea ecx, [ebp-232]
+	push ecx
+	push ecx
+	call vec3_cross
+	call vec3_normalize
+	add esp, 12
+	
 	mov esi, dword[ebp-8]
 	sub esi, 2					;triangle count in esi
 	hyperCube_cellIntersect_indices_loop_start:
@@ -661,6 +710,351 @@ hyperCube_cellIntersection:
 	mov esp, ebp
 	pop edi
 	pop esi
+	pop ebp
+	ret
+	
+	
+	
+hyperCube_update:
+	push ebp
+	mov ebp, esp
+	
+	sub esp, 4		;alpha (rotate angle)		-4
+	
+	;calculate the thing
+	movss xmm0, dword[rotation_speed]
+	movss xmm1, dword[ebp+12]
+	mulss xmm0, xmm1
+	movss dword[ebp-4], xmm0
+	
+	;check for input
+	push dword[GLFW_KEY_1]
+	call input_keyHeld
+	add esp, 4
+	test eax, eax
+	jz hyperCube_update_skip_xy
+		mov eax, dword[ebp+8]
+		movss xmm0, dword[ebp-4]
+		movss xmm1, dword[eax+80]
+		addss xmm1, xmm0
+		movss dword[eax+80], xmm1
+	hyperCube_update_skip_xy:
+	
+	push dword[GLFW_KEY_2]
+	call input_keyHeld
+	add esp, 4
+	test eax, eax
+	jz hyperCube_update_skip_yz
+		mov eax, dword[ebp+8]
+		movss xmm0, dword[ebp-4]
+		movss xmm1, dword[eax+84]
+		addss xmm1, xmm0
+		movss dword[eax+84], xmm1
+	hyperCube_update_skip_yz:
+	
+	push dword[GLFW_KEY_3]
+	call input_keyHeld
+	add esp, 4
+	test eax, eax
+	jz hyperCube_update_skip_xz
+		mov eax, dword[ebp+8]
+		movss xmm0, dword[ebp-4]
+		movss xmm1, dword[eax+88]
+		addss xmm1, xmm0
+		movss dword[eax+88], xmm1
+	hyperCube_update_skip_xz:
+	
+	push dword[GLFW_KEY_4]
+	call input_keyHeld
+	add esp, 4
+	test eax, eax
+	jz hyperCube_update_skip_xw
+		mov eax, dword[ebp+8]
+		movss xmm0, dword[ebp-4]
+		movss xmm1, dword[eax+92]
+		addss xmm1, xmm0
+		movss dword[eax+92], xmm1
+	hyperCube_update_skip_xw:
+	
+	push dword[GLFW_KEY_5]
+	call input_keyHeld
+	add esp, 4
+	test eax, eax
+	jz hyperCube_update_skip_yw
+		mov eax, dword[ebp+8]
+		movss xmm0, dword[ebp-4]
+		movss xmm1, dword[eax+96]
+		addss xmm1, xmm0
+		movss dword[eax+96], xmm1
+	hyperCube_update_skip_yw:
+	
+	push dword[GLFW_KEY_6]
+	call input_keyHeld
+	add esp, 4
+	test eax, eax
+	jz hyperCube_update_skip_zw
+		mov eax, dword[ebp+8]
+		movss xmm0, dword[ebp-4]
+		movss xmm1, dword[eax+100]
+		addss xmm1, xmm0
+		movss dword[eax+100], xmm1
+	hyperCube_update_skip_zw:
+	
+	
+	push dword[ebp+8]
+	call hyperCube_recalculateModelMatrix
+	add esp, 4
+	
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+;void hyperCube_recalculateModelMatrix(HyperCube* pkuba)
+hyperCube_recalculateModelMatrix:
+	push ebp
+	mov ebp, esp
+	
+	
+	sub esp, 64		;helper matrix				-64
+	sub esp, 4		;helper sin(alpha)			-68
+	sub esp, 4		;helper cos(alpha)			-72
+	
+	
+	;init kuba matrix
+	mov eax, dword[ebp+8]
+	add eax, 16
+	
+	push dword[ONE]
+	push eax
+	call mat4_init
+	add esp, 8
+	
+	mov eax, dword[ebp+8]
+	mov eax, dword[eax+80]
+	and eax, 0x7fffffff
+	cmp eax, dword[EPSILON]
+	jl hyperCube_recalculateModelMatrix_skip_xy
+		lea eax, [ebp-64]
+		push dword[ONE]
+		push eax
+		call mat4_init
+		add esp, 8
+		
+		mov eax, dword[ebp+8]
+		fld dword[eax+80]
+		fld dword[eax+80]
+		fsin
+		fstp dword[ebp-68]
+		fcos
+		fstp dword[ebp-72]
+		
+		mov ecx, dword[ebp-72]		;cos
+		mov dword[ebp-64], ecx
+		mov dword[ebp-44], ecx
+		mov ecx, dword[ebp-68]		;sin
+		mov dword[ebp-48], ecx
+		mov dword[ebp-60], ecx
+		xor dword[ebp-60], 0x80000000
+		
+		lea ecx, [ebp-64]
+		add eax, 16
+		
+		push eax
+		push ecx
+		push eax
+		call mat4_mul
+		add esp, 12
+	hyperCube_recalculateModelMatrix_skip_xy:
+	
+	mov eax, dword[ebp+8]
+	mov eax, dword[eax+84]
+	and eax, 0x7fffffff
+	cmp eax, dword[EPSILON]
+	jl hyperCube_recalculateModelMatrix_skip_yz
+		lea eax, [ebp-64]
+		push dword[ONE]
+		push eax
+		call mat4_init
+		add esp, 8
+		
+		mov eax, dword[ebp+8]
+		fld dword[eax+84]
+		fld dword[eax+84]
+		fsin
+		fstp dword[ebp-68]
+		fcos
+		fstp dword[ebp-72]
+		
+		mov ecx, dword[ebp-72]		;cos
+		mov dword[ebp-44], ecx
+		mov dword[ebp-24], ecx
+		mov ecx, dword[ebp-68]		;sin
+		mov dword[ebp-28], ecx
+		mov dword[ebp-40], ecx
+		xor dword[ebp-40], 0x80000000
+		
+		lea ecx, [ebp-64]
+		add eax, 16
+		
+		push eax
+		push ecx
+		push eax
+		call mat4_mul
+		add esp, 12
+	hyperCube_recalculateModelMatrix_skip_yz:
+	
+	mov eax, dword[ebp+8]
+	mov eax, dword[eax+88]
+	and eax, 0x7fffffff
+	cmp eax, dword[EPSILON]
+	jl hyperCube_recalculateModelMatrix_skip_xz
+		lea eax, [ebp-64]
+		push dword[ONE]
+		push eax
+		call mat4_init
+		add esp, 8
+		
+		mov eax, dword[ebp+8]
+		fld dword[eax+88]
+		fld dword[eax+88]
+		fsin
+		fstp dword[ebp-68]
+		fcos
+		fstp dword[ebp-72]
+		
+		mov ecx, dword[ebp-72]		;cos
+		mov dword[ebp-64], ecx
+		mov dword[ebp-24], ecx
+		mov ecx, dword[ebp-68]		;sin
+		mov dword[ebp-32], ecx
+		mov dword[ebp-56], ecx
+		xor dword[ebp-56], 0x80000000
+		
+		lea ecx, [ebp-64]
+		add eax, 16
+		
+		push eax
+		push ecx
+		push eax
+		call mat4_mul
+		add esp, 12
+	hyperCube_recalculateModelMatrix_skip_xz:
+	
+	mov eax, dword[ebp+8]
+	mov eax, dword[eax+92]
+	and eax, 0x7fffffff
+	cmp eax, dword[EPSILON]
+	jl hyperCube_recalculateModelMatrix_skip_xw
+		lea eax, [ebp-64]
+		push dword[ONE]
+		push eax
+		call mat4_init
+		add esp, 8
+		
+		mov eax, dword[ebp+8]
+		fld dword[eax+92]
+		fld dword[eax+92]
+		fsin
+		fstp dword[ebp-68]
+		fcos
+		fstp dword[ebp-72]
+		
+		mov ecx, dword[ebp-72]		;cos
+		mov dword[ebp-64], ecx
+		mov dword[ebp-4], ecx
+		mov ecx, dword[ebp-68]		;sin
+		mov dword[ebp-16], ecx
+		mov dword[ebp-52], ecx
+		xor dword[ebp-52], 0x80000000
+		
+		lea ecx, [ebp-64]
+		add eax, 16
+		
+		push eax
+		push ecx
+		push eax
+		call mat4_mul
+		add esp, 12
+	hyperCube_recalculateModelMatrix_skip_xw:
+	
+	
+	mov eax, dword[ebp+8]
+	mov eax, dword[eax+96]
+	and eax, 0x7fffffff
+	cmp eax, dword[EPSILON]
+	jl hyperCube_recalculateModelMatrix_skip_yw
+		lea eax, [ebp-64]
+		push dword[ONE]
+		push eax
+		call mat4_init
+		add esp, 8
+		
+		mov eax, dword[ebp+8]
+		fld dword[eax+96]
+		fld dword[eax+96]
+		fsin
+		fstp dword[ebp-68]
+		fcos
+		fstp dword[ebp-72]
+		
+		mov ecx, dword[ebp-72]		;cos
+		mov dword[ebp-44], ecx
+		mov dword[ebp-4], ecx
+		mov ecx, dword[ebp-68]		;sin
+		mov dword[ebp-12], ecx
+		mov dword[ebp-36], ecx
+		xor dword[ebp-36], 0x80000000
+		
+		lea ecx, [ebp-64]
+		add eax, 16
+		
+		push eax
+		push ecx
+		push eax
+		call mat4_mul
+		add esp, 12
+	hyperCube_recalculateModelMatrix_skip_yw:
+	
+	mov eax, dword[ebp+8]
+	mov eax, dword[eax+100]
+	and eax, 0x7fffffff
+	cmp eax, dword[EPSILON]
+	jl hyperCube_recalculateModelMatrix_skip_zw
+		lea eax, [ebp-64]
+		push dword[ONE]
+		push eax
+		call mat4_init
+		add esp, 8
+		
+		mov eax, dword[ebp+8]
+		fld dword[eax+100]
+		fld dword[eax+100]
+		fsin
+		fstp dword[ebp-68]
+		fcos
+		fstp dword[ebp-72]
+		
+		mov ecx, dword[ebp-72]		;cos
+		mov dword[ebp-24], ecx
+		mov dword[ebp-4], ecx
+		mov ecx, dword[ebp-68]		;sin
+		mov dword[ebp-8], ecx
+		mov dword[ebp-20], ecx
+		xor dword[ebp-20], 0x80000000
+		
+		lea ecx, [ebp-64]
+		add eax, 16
+		
+		push eax
+		push ecx
+		push eax
+		call mat4_mul
+		add esp, 12
+	hyperCube_recalculateModelMatrix_skip_zw:
+	
+	mov esp, ebp
 	pop ebp
 	ret
 	

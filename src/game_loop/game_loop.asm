@@ -29,7 +29,7 @@ section .bss use32
 	helper resb 4
 	
 	hyperPlane resb 64
-	hyperCube resb 80
+	hyperCube resb 104
 	hyperCube_vertices resb 16
 	hyperCube_indices resb 16
 	hyperCube_renderable resb 4
@@ -101,8 +101,11 @@ section .text use32
 	extern hyperPlane_create
 	extern hyperCube_create
 	extern hyperCube_intersectWithPlane
+	extern hyperCube_update
 	
 	extern vector_init
+	extern vector_destroy
+	extern vector_clear
 	
 	extern vec3_print
 	
@@ -180,19 +183,8 @@ game_loop:
 	call vector_init
 	add esp, 8
 	
-	push hyperCube_indices
-	push hyperCube_vertices
-	push hyperCube
-	push hyperPlane
-	call hyperCube_intersectWithPlane
-	add esp, 16
+	mov dword[hyperCube_renderable], 0
 	
-	push dword[RENDERABLE_ATTRIB_P3C3]
-	push hyperCube_indices
-	push hyperCube_vertices
-	call renderable_create
-	mov dword[hyperCube_renderable], eax
-	add esp, 12
 	
 	push esi		;save esi
 	push edi		;save edi
@@ -256,6 +248,15 @@ game_loop:
 		push dword[pplayer]
 		call player_update
 		add esp, 8
+		
+		
+		;update the hyperkuba
+		push dword[delta_time_seconds]
+		push hyperCube
+		call hyperCube_update
+		add esp, 8
+		
+		call game_loop_update_hyperCube_renderable
 	
 	
 		;set clear color
@@ -314,9 +315,16 @@ game_loop:
 		jz game_loop_loop_start
 		
 		
-	;destroy hypercube renderable
+	;destroy hypercube renderable and the vectors
 	push dword[hyperCube_renderable]
 	call renderable_destroy
+	add esp, 4
+	
+	push hyperCube_vertices
+	call vector_destroy
+	add esp, 4
+	push hyperCube_indices
+	call vector_destroy
 	add esp, 4
 	
 	;destroy player
@@ -326,6 +334,46 @@ game_loop:
 	
 	;deinit renderable
 	call renderable_deinit
+	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+game_loop_update_hyperCube_renderable:
+	push ebp
+	mov ebp, esp
+	
+	;delete the previous renderable if necessary
+	cmp dword[hyperCube_renderable], 0
+	je gluhcr_skip_delete
+		push dword[hyperCube_renderable]
+		call renderable_destroy
+		add esp, 4
+	gluhcr_skip_delete:
+	
+	
+	push hyperCube_vertices
+	call vector_clear
+	push hyperCube_indices
+	call vector_clear
+	add esp, 8
+	
+	
+	;construct the new renderable
+	push hyperCube_indices
+	push hyperCube_vertices
+	push hyperCube
+	push hyperPlane
+	call hyperCube_intersectWithPlane
+	add esp, 16
+	
+	push dword[RENDERABLE_ATTRIB_P3C3]
+	push hyperCube_indices
+	push hyperCube_vertices
+	call renderable_create
+	mov dword[hyperCube_renderable], eax
+	add esp, 12
 	
 	mov esp, ebp
 	pop ebp

@@ -77,21 +77,17 @@ vector_clear:	;void vector_clear(vector* pacalmaca)
 	
 	mov ecx, dword[ebp+8]	;vector* in ecx
 	mov dword[ecx], 0		;size=0
-	mov dword[ecx+4], 1	;capacity=1
+	mov dword[ecx+4], 1		;capacity=1
 	
 	;alloc new data
-	push ecx		;save ecx
-	mov eax, dword[ecx+12]
-	push eax
+	push dword[ecx+12]
 	call my_free
 	add esp, 4
 	
-	mov eax, dword[ecx+8]		;element size in eax
-	push eax
+	mov ecx, dword[ebp+8]
+	push dword[ecx+8]		;element size
 	call my_malloc
-	add esp, 4
-	
-	pop ecx		;restore ecx
+	mov ecx, dword[ebp+8]
 	mov dword[ecx+12],eax		;save the new data*
 	
 	mov esp, ebp
