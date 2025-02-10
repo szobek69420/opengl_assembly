@@ -14,6 +14,8 @@ section .rodata use32
 	ZERO dd 0.0
 	ONE dd 1.0
 	
+	VERY_MUCH dd 6942069.0
+	
 	rotation_speed dd 5.0
 
 	edgeIndices:
@@ -420,7 +422,9 @@ hyperCube_cellIntersection:
 	sub esp, 12		;normalize(vertex[outerIndex] - vertex[0])					-244
 	sub esp, 12		; [ebp-232] x [ebp-244]										-256
 	sub esp, 12		;normalize(vertex[innerIndex] - vertex[0])					-268
-	sub esp, 4		;current min dot											-272
+	sub esp, 4		;current max dot											-272
+	sub esp, 4		;current max index											-276
+	sub esp, 4		;temp dot for index calculations							-280
 	
 	mov eax, dword[ebp+32]
 	mov eax, dword[eax]
@@ -663,33 +667,119 @@ hyperCube_cellIntersection:
 	call vec3_cross
 	call vec3_normalize
 	add esp, 12
-	
+
 	mov esi, dword[ebp-8]
-	sub esi, 2					;triangle count in esi
-	hyperCube_cellIntersect_indices_loop_start:
-		push dword[ebp-4]
+	sub esi, 1					;possible triangle count in esi
+	hyperCube_cellIntersect_indices_outer_loop_start:
+		mov eax, dword[ebp+32]
+		mov ecx, dword[ebp-4]
+		imul ecx, 24
+		add ecx, dword[eax+12]
+		push ecx		;vertex[0]
+		mov eax, esi
+		imul eax, 24
+		add ecx, eax
+		push ecx		;vertex[outerIndex]
+		lea ecx, [ebp-244]
+		push ecx
+		call vec3_sub
+		call vec3_normalize
+		add esp, 12
+		
+		
+		lea ecx, [ebp-232]
+		push ecx
+		sub ecx, 12
+		push ecx
+		sub ecx, 12
+		push ecx
+		call vec3_cross
+		add esp, 12
+		
+		
+		;init maxIndex and maxDot
+		mov dword[ebp-272], 0			;maxDot
+		mov dword[ebp-276], -1			;maxIndex
+		
+		mov edi, dword[ebp-8]
+		sub edi, 1					;triangle count in edi
+		hyperCube_cellIntersect_indices_inner_loop_start:
+			cmp esi, edi
+			je hyperCube_cellIntersect_indices_inner_loop_continue
+		
+			mov eax, dword[ebp+32]
+			mov ecx, dword[ebp-4]
+			imul ecx, 24
+			add ecx, dword[eax+12]
+			push ecx		;vertex[0]
+			mov eax, edi
+			imul eax, 24
+			add ecx, eax
+			push ecx		;vertex[innerIndex]
+			lea ecx, [ebp-268]
+			push ecx
+			call vec3_sub
+			call vec3_normalize
+			add esp, 12
+			
+			lea eax, [ebp-256]
+			push eax
+			lea eax, [ebp-268]
+			push eax
+			call vec3_dot
+			fstp dword[ebp-280]
+			add esp, 8
+			mov eax, dword[ebp-280]
+			and eax, 0x80000000
+			test eax, eax
+			jnz hyperCube_cellIntersect_indices_inner_loop_continue
+			
+			lea eax, [ebp-244]
+			push eax
+			lea eax, [ebp-268]
+			push eax
+			call vec3_dot
+			fstp dword[ebp-280]
+			add esp, 8
+			
+			cmp dword[ebp-276], -1
+			je hyperCube_cellIntersect_indices_inner_loop_vertex_found
+			movss xmm0, dword[ebp-272]
+			ucomiss xmm0, dword[ebp-280]
+			jb hyperCube_cellIntersect_indices_inner_loop_vertex_found
+			jmp hyperCube_cellIntersect_indices_inner_loop_continue
+			hyperCube_cellIntersect_indices_inner_loop_vertex_found:
+				mov eax, dword[ebp-280]
+				mov dword[ebp-272], eax
+				mov dword[ebp-276], edi
+			
+			hyperCube_cellIntersect_indices_inner_loop_continue:
+			dec edi
+			test edi, edi
+			jnz hyperCube_cellIntersect_indices_inner_loop_start
+			
+		;did we find a triangle?
+		cmp dword[ebp-276], -1
+		je hyperCube_cellIntersect_indices_outer_loop_continue
+		
+		;add triangle
+		push dword[ebp-4]		;0
 		push dword[ebp+36]
+		call vector_push_back
+		
+		add dword[esp+4], esi	;outer index
+		call vector_push_back
+		
+		mov eax, dword[ebp-276]
+		add eax, dword[ebp-4]
+		mov dword[esp+4], eax	;inner index
 		call vector_push_back
 		add esp, 8
 		
-		mov eax, esi
-		add eax, dword[ebp-4]
-		push eax
-		push dword[ebp+36]
-		call vector_push_back
-		add esp, 8
-	
-		mov eax, esi
-		add eax, 1
-		add eax, dword[ebp-4]
-		push eax
-		push dword[ebp+36]
-		call vector_push_back
-		add esp, 8
-		
+		hyperCube_cellIntersect_indices_outer_loop_continue:
 		dec esi
 		test esi, esi
-		jnz hyperCube_cellIntersect_indices_loop_start
+		jnz hyperCube_cellIntersect_indices_outer_loop_start
 		
 	jmp hyperCube_cellIntersect_end
 		

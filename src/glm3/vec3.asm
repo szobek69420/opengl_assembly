@@ -24,7 +24,7 @@ section .text use32
 	global vec3_initUniform		;void vec3_initUniform(vec3* buffer, float value)	//fills the vector with the same value
 	global vec3_add			;void vec3_add(vec3* buffer, vec3* a, vec3* b)			//buffer may point to a or b
 	global vec3_sub			;void vec3_sub(vec3* buffer, vec3* a, vec3* b)			//buffer may point to a or b
-	global vec3_dot			;void vec3_dot(vec3* a, vec3* b)			//returns the value on the FPU stack
+	global vec3_dot			;float vec3_dot(vec3* a, vec3* b)			//returns the value on the FPU stack
 	global vec3_cross		;void vec3_cross(vec3* buffer, vec3* a, vec3* b)	//buffer may point to a or b
 	global vec3_scale		;void vec3_scale(vec3* buffer, vec3* vec, float factor)	//buffer may point to vec
 	global vec3_sqrMagnitude	;float vec3_sqrMagnitude(vec3* vec)			//returns the value on the FPU stack
