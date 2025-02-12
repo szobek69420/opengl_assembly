@@ -20,6 +20,11 @@ section .text use32
 	
 	global my_fgets			;char* my_fgets(char* buffer, int numBytes, FILE* file)
 	global my_fprintf		;void my_fprintf(FILE* file, const char* format, ...args)
+	global my_fgetc			;int my_fgetc(FILE* file)
+	
+	;jumps numBytes from the specified position
+	;if fromCurrent is zero, the new position of the file pointer will be numBytes, otherwise it will be the current position of the file pointer + numBytes
+	global my_fjmp			;void my_fjmp(FILE* file, int numBytes, int fromCurrent)
 	
 	dll_import kernel32.dll, CreateFileA
 	dll_import kernel32.dll, CloseHandle
@@ -265,6 +270,59 @@ my_fprintf:
 	call [WriteFile]
 	
 	my_fprintf_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+my_fgetc:
+	push ebp
+	mov ebp, esp
+	
+	sub esp, 4		;number of bytes read
+	sub esp, 4		;buffer
+	
+	push 0
+	lea eax, [ebp-4]
+	push eax
+	push 1
+	sub eax, 4
+	push eax
+	push dword[ebp+8]
+	call [ReadFile]
+	
+	test eax, eax
+	jz my_fgetc_error
+	
+	cmp dword[ebp-4], 1
+	jne my_fgetc_error
+	
+	xor eax, eax
+	mov al, byte[ebp-8]
+	
+	jmp my_fgetc_end
+	my_fgetc_error:
+		mov eax, -1
+	my_fgetc_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+my_fjmp:
+	push ebp
+	mov ebp, esp
+	
+	push 0						;FILE_BEGIN
+	cmp dword[ebp+16], 0
+	je my_fjmp_from_begin
+		mov dword[esp], 1		;FILE_CURRENT
+	my_fjmp_from_begin:
+	push 0
+	push dword[ebp+12]
+	push dword[ebp+8]
+	call [SetFilePointer]
+	
 	mov esp, ebp
 	pop ebp
 	ret
