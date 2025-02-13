@@ -6,8 +6,14 @@
 %endmacro
 
 section .rodata use32
+	ONE dd 1.0
+	TWO dd 2.0
+	THREE dd 3.0
+	FOUR dd 4.0
+
 	print_new_line db 10,0
 	print_int db "%d ",0
+	print_float_nl db "%f",10,0
 
 	sus db "sus",0
 	mega db "mega",0
@@ -27,6 +33,9 @@ section .bss use32
 	file resb 4
 	
 	pwindow resb 4		;GLFWwindow*
+	
+	queue resb 20
+	queue_buffer resb 8
 	
 
 section .text use32

@@ -12,7 +12,7 @@ section .rodata use32
 	P15 dd 0.15
 	P6 dd 0.6
 	
-	test_text db "BENITO SUSSOLINI 69420",10,0
+	test_text db "HOLODO MORBIUS",0
 	print_int db "%d",10,0
 	print_two_ints db "%d %d",10,0
 	print_float db "%f",0
