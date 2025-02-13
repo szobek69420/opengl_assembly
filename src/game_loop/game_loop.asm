@@ -12,7 +12,7 @@ section .rodata use32
 	P15 dd 0.15
 	P6 dd 0.6
 	
-	test_text db "skibidi lidl",10,0
+	test_text db "BENITO SUSSOLINI 69420",10,0
 	print_int db "%d",10,0
 	print_two_ints db "%d %d",10,0
 	print_float db "%f",0
@@ -109,6 +109,12 @@ section .text use32
 	
 	extern vec3_print
 	
+	extern textRenderer_init
+	extern textRenderer_deinit
+	extern textRenderer_setScreenSize
+	extern textRenderer_drawText
+	extern TEXT_ALIGN_BOTTOM_LEFT
+	
 game_loop:
 	push ebp
 	mov ebp, esp
@@ -158,6 +164,13 @@ game_loop:
 	
 	;init renderable
 	call renderable_init
+	
+	;init text renderer
+	call textRenderer_init
+	push 1000
+	push 1000
+	call textRenderer_setScreenSize
+	add esp, 8
 	
 	;create player
 	push camera
@@ -286,6 +299,14 @@ game_loop:
 		call renderable_render
 		add esp, 12
 		
+		;draw text
+		push 400
+		push 400
+		push dword[TEXT_ALIGN_BOTTOM_LEFT]
+		push test_text
+		call textRenderer_drawText
+		add esp, 16
+		
 		;swap buffers
 		push dword[ebp-4]
 		call [glfwSwapBuffers]
@@ -331,6 +352,9 @@ game_loop:
 	push dword[pplayer]
 	call player_destroy
 	add esp, 4
+	
+	;deinit text renderer
+	call textRenderer_deinit
 	
 	;deinit renderable
 	call renderable_deinit

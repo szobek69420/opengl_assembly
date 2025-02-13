@@ -7,8 +7,8 @@ section .rodata use32
 	global FONT_CHAR_HEIGHT
 	global FONT_TABLE
 	
-	FONT_CHAR_WIDTH equ 6
-	FONT_CHAR_HEIGHT equ 8
+	FONT_CHAR_WIDTH dd 6
+	FONT_CHAR_HEIGHT dd 8
 	
 	FONT_TABLE:
 		dd TEXT_SPACE
@@ -159,421 +159,421 @@ section .rodata use32
 		dd TEXT_SPACE
 	
 	TEXT_SPACE:
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
 	
 	TEXT_COMMA:
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
 		
 	TEXT_DASH:
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
 	
 	TEXT_DOT:
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
 	
 	TEXT_COLON:
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
 	
 	TEXT_SEMICOLON:
-		db 0, 0, 0, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 0, 0, 0, 0, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0,    0,    0,    0,    0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
 
 	TEXT_A:
-		db 0, 0, 1, 1, 0, 0
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
 	
 	TEXT_B:
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 1, 1, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_C:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_D:
-		db 1, 1, 1, 1, 0, 0
-		db 1, 1, 0, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 1, 1, 0
-		db 1, 1, 1, 1, 0, 0
+		db 0xff, 0xff, 0xff, 0xff, 0,    0
+		db 0xff, 0xff, 0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0xff, 0xff, 0,    0
 	
 	TEXT_E:
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 1
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	
 	TEXT_F:
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
 	
 	TEXT_G:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 1, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_H:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
 	
 	TEXT_I:
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_J:
-		db 0, 0, 1, 1, 1, 1
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 0, 1, 1, 0
-		db 1, 1, 0, 1, 1, 0
-		db 0, 1, 1, 1, 0, 0
+		db 0,    0,    0xff, 0xff, 0xff, 0xff
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0xff, 0xff, 0
+		db 0,    0xff, 0xff, 0xff, 0,    0
 	
 	TEXT_K:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 1, 1, 0
-		db 1, 1, 1, 1, 0, 0
-		db 1, 1, 1, 0, 0, 0
-		db 1, 1, 1, 1, 0, 0
-		db 1, 1, 0, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0xff, 0xff, 0,    0
+		db 0xff, 0xff, 0xff, 0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0,    0
+		db 0xff, 0xff, 0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
 	
 	TEXT_L:
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 1, 1, 1, 1
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	
 	TEXT_M:
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 1, 0, 1, 1
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 1, 0, 1
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 0, 0, 1
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0xff, 0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0xff, 0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
 	
 	TEXT_N:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 0, 1, 1
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 1, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
 	
 	TEXT_O:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_P:
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
 	
 	TEXT_Q:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 0, 1, 1, 1
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0xff
 	
 	TEXT_R:
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 1, 1, 0, 0
-		db 1, 1, 0, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0xff, 0xff, 0,    0
+		db 0xff, 0xff, 0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
 	
 	TEXT_S:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 0, 0, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_T:
-		db 1, 1, 1, 1, 1, 1
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
 	
 	TEXT_U:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_V:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
 	
 	TEXT_W:
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 0, 0, 1
-		db 1, 1, 0, 1, 0, 1
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 1, 0, 1, 1
-		db 1, 1, 0, 0, 0, 1
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
+		db 0xff, 0xff, 0,    0xff, 0,    0xff
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0xff, 0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0xff
 	
 	TEXT_X:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
 	
 	TEXT_Y:
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
 	
 	TEXT_Z:
-		db 1, 1, 1, 1, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 1
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	
 	TEXT_0:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 1, 1, 1
-		db 1, 1, 1, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0xff, 0xff, 0xff
+		db 0xff, 0xff, 0xff, 0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_1:
-		db 0, 0, 1, 1, 0, 0
-		db 0, 1, 1, 1, 0, 0
-		db 1, 1, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 1, 1, 1, 1, 1, 1
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0xff, 0xff, 0xff, 0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	
 	TEXT_2:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 1, 1, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 1
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0xff, 0xff, 0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	
 	TEXT_3:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 0, 0, 1, 1, 1, 0
-		db 0, 0, 0, 0, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0,    0,    0xff, 0xff, 0xff, 0
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_4:
-		db 0, 0, 0, 0, 1, 0
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 1, 1, 1, 0
-		db 0, 1, 0, 1, 1, 0
-		db 1, 1, 1, 1, 1, 1
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 0, 1, 1, 0
+		db 0,    0,    0,    0,    0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0xff, 0
+		db 0,    0xff, 0,    0xff, 0xff, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0,    0xff, 0xff, 0
 	
 	TEXT_5:
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 0
-		db 0, 0, 0, 0, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_6:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 0, 0
-		db 1, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0,    0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_7:
-		db 1, 1, 1, 1, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 0, 0, 1, 1, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
-		db 0, 0, 1, 1, 0, 0
+		db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0,    0,    0xff, 0xff, 0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
+		db 0,    0,    0xff, 0xff, 0,    0
 	
 	TEXT_8:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
 	
 	TEXT_9:
-		db 0, 1, 1, 1, 1, 0
-		db 1, 1, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 0, 0, 0, 0, 1, 1
-		db 1, 1, 0, 0, 1, 1
-		db 0, 1, 1, 1, 1, 0
+		db 0,    0xff, 0xff, 0xff, 0xff, 0
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0,    0,    0,    0,    0xff, 0xff
+		db 0xff, 0xff, 0,    0,    0xff, 0xff
+		db 0,    0xff, 0xff, 0xff, 0xff, 0

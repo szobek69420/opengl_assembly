@@ -22,6 +22,8 @@ nasm -fobj player/player.asm -o build/player.o
 nasm -fobj hypershapes/hyperplane.asm -o build/hyperplane.o
 nasm -fobj hypershapes/hypercube.asm -o build/hypercube.o
 nasm -fobj renderable/renderable.asm -o build/renderable.o
+nasm -fobj renderer/text/font.asm -o build/font.o
+nasm -fobj renderer/text/text_renderer.asm -o build/text_renderer.o
 alink.exe -subsys console -oPE ^
 build/test.o ^
 build/window.o ^
@@ -30,6 +32,8 @@ build/game_loop.o ^
 build/camera.o ^
 build/input.o ^
 build/glfw.o ^
+build/text_renderer.o ^
+build/font.o ^
 build/renderable.o ^
 build/opengl.o ^
 build/shader.o ^

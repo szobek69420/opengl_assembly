@@ -116,9 +116,11 @@ section .rodata use32
 	glDefine GL_ONE_MINUS_SRC_COLOR, 0x301
 	glDefine GL_POINTS, 0x0
 	glDefine GL_READ_FRAMEBUFFER, 0x8ca8
+	glDefine GL_RED, 0x1903
 	glDefine GL_RENDERBUFFER, 0x8d41
 	glDefine GL_REPEAT, 0x2901
 	glDefine GL_RGB, 0x1907
+	glDefine GL_RGB8, 0x8051
 	glDefine GL_RGBA, 0x1908
 	glDefine GL_SRC_ALPHA, 0x302
 	glDefine GL_SRC_COLOR, 0x300
@@ -162,8 +164,10 @@ section .rodata use32
 	glDefine GL_TEXTURE29, 0x84dd
 	glDefine GL_TEXTURE30, 0x84de
 	glDefine GL_TEXTURE31, 0x84df
+	glDefine GL_TRIANGLE_FAN, 0x6
 	glDefine GL_TRIANGLES, 0x4
 	glDefine GL_TRUE, 0x1
+	glDefine GL_UNPACK_ALIGNMENT, 0xcf5
 	glDefine GL_UNSIGNED_BYTE, 0x1401
 	glDefine GL_UNSIGNED_INT, 0x1405
 	glDefine GL_UNSIGNED_INT_24_8, 0x84fa
@@ -227,6 +231,7 @@ section .rodata use32
 	name_glGetString db "glGetString",0
 	name_glGetUniformLocation db "glGetUniformLocation",0
 	name_glLinkProgram db "glLinkProgram",0
+	name_glPixelStorei db "glPixelStorei",0
 	name_glReadPixels db "glReadPixels",0
 	name_glRenderbufferStorage db "glRenderbufferStorage",0
 	name_glShaderSource db "glShaderSource",0
@@ -313,6 +318,7 @@ section .bss use32
 	glFunc glGetString
 	glFunc glGetUniformLocation
 	glFunc glLinkProgram
+	glFunc glPixelStorei
 	glFunc glReadPixels
 	glFunc glRenderbufferStorage
 	glFunc glShaderSource
@@ -407,6 +413,7 @@ load_gl_functions:
 	load dword[ebp+8], glGetString
 	load dword[ebp+8], glGetUniformLocation
 	load dword[ebp+8], glLinkProgram
+	load dword[ebp+8], glPixelStorei
 	load dword[ebp+8], glReadPixels
 	load dword[ebp+8], glRenderbufferStorage
 	load dword[ebp+8], glShaderSource
