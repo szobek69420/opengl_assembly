@@ -1,14 +1,24 @@
 [BITS 32]
 
-global TEXT_ALIGN_TOP_LEFT
-global TEXT_ALIGN_TOP_CENTER
-global TEXT_ALIGN_TOP_RIGHT
-global TEXT_ALIGN_CENTER_LEFT
-global TEXT_ALIGN_CENTER_CENTER
-global TEXT_ALIGN_CENTER_RIGHT
-global TEXT_ALIGN_BOTTOM_LEFT
-global TEXT_ALIGN_BOTTOM_CENTER
-global TEXT_ALIGN_BOTTOM_RIGHT
+global TEXT_ORIGIN_TOP_LEFT
+global TEXT_ORIGIN_TOP_CENTER
+global TEXT_ORIGIN_TOP_RIGHT
+global TEXT_ORIGIN_CENTER_LEFT
+global TEXT_ORIGIN_CENTER_CENTER
+global TEXT_ORIGIN_CENTER_RIGHT
+global TEXT_ORIGIN_BOTTOM_LEFT
+global TEXT_ORIGIN_BOTTOM_CENTER
+global TEXT_ORIGIN_BOTTOM_RIGHT
+
+global TEXT_PIVOT_TOP_LEFT
+global TEXT_PIVOT_TOP_CENTER
+global TEXT_PIVOT_TOP_RIGHT
+global TEXT_PIVOT_CENTER_LEFT
+global TEXT_PIVOT_CENTER_CENTER
+global TEXT_PIVOT_CENTER_RIGHT
+global TEXT_PIVOT_BOTTOM_LEFT
+global TEXT_PIVOT_BOTTOM_CENTER
+global TEXT_PIVOT_BOTTOM_RIGHT
 
 
 section .rodata use32
@@ -27,20 +37,33 @@ section .rodata use32
 	uniform_scale_name db "scale",0
 	
 	vertex_data:
-	dd 1.0, 0.0, 1.0, 1.0
-	dd 1.0, 1.0, 1.0, 0.0
-	dd 0.0, 1.0, 0.0, 0.0
-	dd 0.0, 0.0, 0.0, 1.0
+	dd 0.0, 0.0, 0.0, 0.0
+	dd 0.0, 1.0, 0.0, 1.0
+	dd 1.0, 1.0, 1.0, 1.0
+	dd 1.0, 0.0, 1.0, 0.0
 	
-	TEXT_ALIGN_TOP_LEFT 		dd		0b100100
-	TEXT_ALIGN_TOP_CENTER 		dd	 	0b100010
-	TEXT_ALIGN_TOP_RIGHT		dd		0b100001
-	TEXT_ALIGN_CENTER_LEFT		dd		0b010100
-	TEXT_ALIGN_CENTER_CENTER	dd		0b010010
-	TEXT_ALIGN_CENTER_RIGHT		dd		0b010001
-	TEXT_ALIGN_BOTTOM_LEFT		dd		0b001100
-	TEXT_ALIGN_BOTTOM_CENTER	dd		0b001010
-	TEXT_ALIGN_BOTTOM_RIGHT		dd		0b001001
+	
+	;where is (0,0) on the screen
+	TEXT_ORIGIN_TOP_LEFT 			dd		0b100100
+	TEXT_ORIGIN_TOP_CENTER 			dd	 	0b100010
+	TEXT_ORIGIN_TOP_RIGHT			dd		0b100001
+	TEXT_ORIGIN_CENTER_LEFT			dd		0b010100
+	TEXT_ORIGIN_CENTER_CENTER		dd		0b010010
+	TEXT_ORIGIN_CENTER_RIGHT		dd		0b010001
+	TEXT_ORIGIN_BOTTOM_LEFT			dd		0b001100
+	TEXT_ORIGIN_BOTTOM_CENTER		dd		0b001010
+	TEXT_ORIGIN_BOTTOM_RIGHT		dd		0b001001
+	
+	;where is (0,0) in the bounding rectangle of the text
+	TEXT_PIVOT_TOP_LEFT 			dd		0b100100
+	TEXT_PIVOT_TOP_CENTER 			dd	 	0b100010
+	TEXT_PIVOT_TOP_RIGHT			dd		0b100001
+	TEXT_PIVOT_CENTER_LEFT			dd		0b010100
+	TEXT_PIVOT_CENTER_CENTER		dd		0b010010
+	TEXT_PIVOT_CENTER_RIGHT			dd		0b010001
+	TEXT_PIVOT_BOTTOM_LEFT			dd		0b001100
+	TEXT_PIVOT_BOTTOM_CENTER		dd		0b001010
+	TEXT_PIVOT_BOTTOM_RIGHT			dd		0b001001
 	
 
 section .bss use32
@@ -67,7 +90,7 @@ section .text use32
 	global textRenderer_deinit			;void textRenderer_deinit()
 	
 	;it doesn't touch the face cull settings, so that can cause some anomalies
-	global textRenderer_drawText		;void textRenderer_drawText(const char* text, int alignment, int xPos, int yPos)
+	global textRenderer_drawText		;void textRenderer_drawText(const char* text, int origin, int pivot, int xPos, int yPos)
 	
 	global textRenderer_setScreenSize	;void textRenderer_setScreenSize(int widthInPixels, int heightInPixels)
 	global textRenderer_setFontSize		;void textRenderer_setFontSize(int xSize, int ySize)
@@ -151,8 +174,8 @@ textRenderer_init:
 	sub esp, 4			;texture data size per pixel
 	
 	;set screen size
-	push dword[WINDOW_SIZE_X]
 	push dword[WINDOW_SIZE_Y]
+	push dword[WINDOW_SIZE_X]
 	call textRenderer_setScreenSize
 	add esp, 8
 	
@@ -343,6 +366,7 @@ textRenderer_drawText:
 	sub esp, 4			;ypos
 	sub esp, 4			;xpos
 	
+	
 	;set the uniform values
 	push dword[shader]
 	call [glUseProgram]
@@ -359,15 +383,131 @@ textRenderer_drawText:
 	call [glUniformMatrix4fv]
 	
 	;calculate position
-	fild dword[ebp+24]
-	fstp dword[ebp-8]
-	fild dword[ebp+28]
-	fstp dword[ebp-4]
+	mov eax, dword[ebp+20]
+	mov ecx, eax
+	and ecx, 0b001000
+	test ecx, ecx
+	jnz textRenderer_drawText_vorigin_bottom
+	mov ecx, eax
+	and ecx, 0b010000
+	test ecx, ecx
+	jnz textRenderer_drawText_vorigin_center
+	jmp textRenderer_drawText_vorigin_top
+	textRenderer_drawText_vorigin_top:
+		fild dword[ebp+32]
+		fstp dword[ebp-4]
+		jmp textRenderer_drawText_vorigin_done
+		
+	textRenderer_drawText_vorigin_center:
+		mov eax, dword[WINDOW_SIZE_Y]
+		sar eax, 1
+		add eax, dword[ebp+32]
+		mov dword[ebp-4], eax
+		fild dword[ebp-4]
+		fstp dword[ebp-4]
+		jmp textRenderer_drawText_vorigin_done
+	
+	textRenderer_drawText_vorigin_bottom:
+		mov eax, dword[WINDOW_SIZE_Y]
+		sub eax, dword[ebp+32]
+		mov dword[ebp-4], eax
+		fild dword[ebp-4]
+		fstp dword[ebp-4]
+		jmp textRenderer_drawText_vorigin_done
+	
+	textRenderer_drawText_vorigin_done:
+	
 	
 	mov eax, dword[ebp+20]
-	and eax, 0b0100000
-	test eax, eax
-	jz textRenderer_drawText_not_hcenter
+	mov ecx, eax
+	and ecx, 0b000001
+	test ecx, ecx
+	jnz textRenderer_drawText_horigin_bottom
+	mov ecx, eax
+	and ecx, 0b000010
+	test ecx, ecx
+	jnz textRenderer_drawText_horigin_center
+	jmp textRenderer_drawText_horigin_top
+	textRenderer_drawText_horigin_top:
+		fild dword[ebp+28]
+		fstp dword[ebp-8]
+		jmp textRenderer_drawText_horigin_done
+		
+	textRenderer_drawText_horigin_center:
+		mov eax, dword[WINDOW_SIZE_X]
+		sar eax, 1
+		add eax, dword[ebp+28]
+		mov dword[ebp-8], eax
+		fild dword[ebp-8]
+		fstp dword[ebp-8]
+		jmp textRenderer_drawText_horigin_done
+	
+	textRenderer_drawText_horigin_bottom:
+		mov eax, dword[WINDOW_SIZE_Y]
+		sub eax, dword[ebp+28]
+		mov dword[ebp-8], eax
+		fild dword[ebp-8]
+		fstp dword[ebp-8]
+		jmp textRenderer_drawText_horigin_done
+	
+	textRenderer_drawText_horigin_done:
+	
+	
+	
+	mov eax, dword[ebp+24]
+	mov ecx, eax
+	and ecx, 0b001000
+	test ecx, ecx
+	jnz textRenderer_drawText_vpivot_bottom
+	mov ecx, eax
+	and ecx, 0b010000
+	test ecx, ecx
+	jnz textRenderer_drawText_vpivot_center
+	jmp textRenderer_drawText_vpivot_top
+	textRenderer_drawText_vpivot_top:
+		jmp textRenderer_drawText_vpivot_done
+		
+	textRenderer_drawText_vpivot_center:
+		push dword[ebp+16]
+		call textRenderer_getTextHeight
+		shr eax, 1
+		mov dword[esp], eax
+		fld dword[ebp-4]
+		fild dword[esp]
+		fsubp
+		fstp dword[ebp-4]
+		add esp, 4
+		jmp textRenderer_drawText_vpivot_done
+	
+	textRenderer_drawText_vpivot_bottom:
+		push dword[ebp+16]
+		call textRenderer_getTextHeight
+		mov dword[esp], eax
+		fld dword[ebp-4]
+		fild dword[esp]
+		fsubp
+		fstp dword[ebp-4]
+		add esp, 4
+		jmp textRenderer_drawText_vpivot_done
+	
+	textRenderer_drawText_vpivot_done:
+	
+	
+	
+	mov eax, dword[ebp+24]
+	mov ecx, eax
+	and ecx, 0b000001
+	test ecx, ecx
+	jnz textRenderer_drawText_hpivot_bottom
+	mov ecx, eax
+	and ecx, 0b000010
+	test ecx, ecx
+	jnz textRenderer_drawText_hpivot_center
+	jmp textRenderer_drawText_hpivot_top
+	textRenderer_drawText_hpivot_top:
+		jmp textRenderer_drawText_hpivot_done
+		
+	textRenderer_drawText_hpivot_center:
 		push dword[ebp+16]
 		call textRenderer_getTextWidth
 		shr eax, 1
@@ -377,10 +517,20 @@ textRenderer_drawText:
 		fsubp
 		fstp dword[ebp-8]
 		add esp, 4
-		jmp textRenderer_drawText_halign_done
-	textRenderer_drawText_not_hcenter:
+		jmp textRenderer_drawText_hpivot_done
 	
-	textRenderer_drawText_halign_done:
+	textRenderer_drawText_hpivot_bottom:
+		push dword[ebp+16]
+		call textRenderer_getTextWidth
+		mov dword[esp], eax
+		fld dword[ebp-8]
+		fild dword[esp]
+		fsubp
+		fstp dword[ebp-8]
+		add esp, 4
+		jmp textRenderer_drawText_hpivot_done
+	
+	textRenderer_drawText_hpivot_done:
 	
 	
 	;prepare the texture and vertex array
@@ -452,8 +602,8 @@ textRenderer_setScreenSize:
 	
 	push dword[ONE]
 	push 0
-	push dword[ebp-8]
 	push 0
+	push dword[ebp-8]
 	push dword[ebp-4]
 	push 0
 	push screen_matrix
@@ -492,17 +642,26 @@ textRenderer_setSpacing:
 	
 textRenderer_getTextWidth:
 	mov eax, dword[esp+4]
+	cmp byte[eax], 0
+	jne textRenderer_getTextWidth_not_zero
+		xor eax, eax
+		ret
+	textRenderer_getTextWidth_not_zero:
+	
 	push eax
 	call my_strlen
-	mov dword[esp], eax
-	fild dword[esp]
-	fstp dword[esp]
-	movss xmm0, dword[esp]
-	movss xmm1, dword[font_size_x]
-	movss xmm2, dword[spacing]
-	addss xmm1, xmm2
-	mulss xmm0, xmm1
-	subss xmm0, xmm2		;xmm0=length*(char_width+spacing)-spacing
+	mov ecx, dword[font_size_x_int]
+	imul ecx, eax
+	
+	fld dword[spacing]
+	fistp dword[esp]
+	mov edx, dword[esp]
+	dec eax
+	imul edx, eax
+	
+	add ecx, edx
+	mov eax, ecx
+	
 	add esp, 4
 	ret
 	

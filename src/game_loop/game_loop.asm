@@ -115,7 +115,9 @@ section .text use32
 	extern textRenderer_deinit
 	extern textRenderer_setScreenSize
 	extern textRenderer_drawText
-	extern TEXT_ALIGN_BOTTOM_LEFT
+	
+	extern TEXT_ORIGIN_BOTTOM_CENTER
+	extern TEXT_PIVOT_BOTTOM_CENTER
 	
 	extern WINDOW_SIZE_X
 	extern WINDOW_SIZE_Y
@@ -279,12 +281,13 @@ game_loop:
 		add esp, 12
 		
 		;draw text
-		push 400
-		push 400
-		push dword[TEXT_ALIGN_BOTTOM_LEFT]
+		push 0
+		push 0
+		push dword[TEXT_PIVOT_BOTTOM_CENTER]
+		push dword[TEXT_ORIGIN_BOTTOM_CENTER]
 		push test_text
 		call textRenderer_drawText
-		add esp, 16
+		add esp, 20
 		
 		;swap buffers
 		push dword[current_window]
@@ -429,8 +432,6 @@ gameLoop_handleWindowResize:
 	call [glViewport]
 	
 	
-	push test_text
-	call my_printf
 	
 	gameLoop_handleWindowResize_end:
 	mov esp, ebp
