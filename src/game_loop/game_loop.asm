@@ -38,6 +38,8 @@ section .data use32
 	delta_time_seconds dd 0.0			;float
 	
 	current_window dd 0					;GLFWwindow*
+	
+	should_resize dd 0
 
 section .text use32
 
@@ -156,7 +158,7 @@ game_loop:
 	add esp, 8
 	
 	;set window resize callback
-	push gameLoop_handleWindowResize
+	push gameLoop_windowResizeCallback
 	push dword[current_window]
 	call [glfwSetFramebufferSizeCallback]
 	add esp, 8
@@ -235,6 +237,14 @@ game_loop:
 		fld dword[ONE_PER_THOUSAND]
 		fmulp
 		fstp dword[delta_time_seconds]
+		
+		
+		;check if the window should be resized
+		cmp dword[should_resize], 0
+		je gameLoop_loop_no_resize
+			mov dword[should_resize], 0
+			call gameLoop_handleWindowResize
+		gameLoop_loop_no_resize:
 		
 		
 		;player
@@ -390,19 +400,36 @@ gameLoop_update_hyperCube_renderable:
 	
 	
 	
-;void gameLoop_handleWindowResize(GLFWwindow* pwindow, int width, int height)
-gameLoop_handleWindowResize:
+	
+;only sets the window size and the should_resize flag
+;therefore only triggering handleWindowResize once per frame at most
+gameLoop_windowResizeCallback:
 	push ebp
 	mov ebp, esp
 	
 	mov eax, dword[ebp+8]
 	cmp eax, dword[current_window]
-	jne gameLoop_handleWindowResize_end
+	jne gameLoop_windowResizeCallback_end
 	
-	mov eax, dword[ebp+12]
-	mov dword[WINDOW_SIZE_X], eax
-	mov eax, dword[ebp+16]
-	mov dword[WINDOW_SIZE_Y], eax
+		mov eax, dword[ebp+12]
+		mov dword[WINDOW_SIZE_X], eax
+		mov eax, dword[ebp+16]
+		mov dword[WINDOW_SIZE_Y], eax
+		
+		mov dword[should_resize], 69
+	
+	gameLoop_windowResizeCallback_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+	
+
+;void gameLoop_handleWindowResize()
+gameLoop_handleWindowResize:
+	push ebp
+	mov ebp, esp
 	
 	;tell it to the text renderer
 	push dword[WINDOW_SIZE_Y]
@@ -431,7 +458,7 @@ gameLoop_handleWindowResize:
 	push 0
 	call [glViewport]
 	
-	
+
 	
 	gameLoop_handleWindowResize_end:
 	mov esp, ebp
