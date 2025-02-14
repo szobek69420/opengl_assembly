@@ -52,6 +52,8 @@ section .bss use32
 	font_size_x resb 4				;float
 	font_size_y resb 4				;float
 	
+	spacing resb 4					;float
+	
 	vao resb 4
 	vbo resb 4
 	shader resb 4
@@ -69,9 +71,13 @@ section .text use32
 	
 	global textRenderer_setScreenSize	;void textRenderer_setScreenSize(int widthInPixels, int heightInPixels)
 	global textRenderer_setFontSize		;void textRenderer_setFontSize(int xSize, int ySize)
+	global textRenderer_setSpacing		;void textRenderer_setSpacing(int spacing)	//spacing between the characters
 	
+	global textRenderer_getTextWidth	;int textRenderer_getTextWidth(const char* text)
+	global textRenderer_getTextHeight	;int textRenderer_getTextHeight(const char* text)
 	
 	extern my_printf
+	extern my_strlen
 	
 	extern mat4_ortho
 	extern mat4_print
@@ -84,6 +90,9 @@ section .text use32
 	extern FONT_TABLE
 	extern FONT_CHAR_WIDTH
 	extern FONT_CHAR_HEIGHT
+	
+	extern WINDOW_SIZE_X
+	extern WINDOW_SIZE_Y
 	
 	extern glGetError
 	
@@ -141,9 +150,9 @@ textRenderer_init:
 	
 	sub esp, 4			;texture data size per pixel
 	
-	;set screen size to 100*100
-	push 100
-	push 100
+	;set screen size
+	push dword[WINDOW_SIZE_X]
+	push dword[WINDOW_SIZE_Y]
 	call textRenderer_setScreenSize
 	add esp, 8
 	
@@ -156,6 +165,11 @@ textRenderer_init:
 	push eax
 	call textRenderer_setFontSize
 	add esp, 8
+	
+	;set spacing
+	push 3
+	call textRenderer_setSpacing
+	add esp, 4
 	
 	;create vao and vbo
 	push vao
@@ -344,11 +358,29 @@ textRenderer_drawText:
 	push dword[uniform_pv_location]
 	call [glUniformMatrix4fv]
 	
-	;calculate position TODO!!!!!!
+	;calculate position
 	fild dword[ebp+24]
 	fstp dword[ebp-8]
 	fild dword[ebp+28]
 	fstp dword[ebp-4]
+	
+	mov eax, dword[ebp+20]
+	and eax, 0b0100000
+	test eax, eax
+	jz textRenderer_drawText_not_hcenter
+		push dword[ebp+16]
+		call textRenderer_getTextWidth
+		shr eax, 1
+		mov dword[esp], eax
+		fld dword[ebp-8]
+		fild dword[esp]
+		fsubp
+		fstp dword[ebp-8]
+		add esp, 4
+		jmp textRenderer_drawText_halign_done
+	textRenderer_drawText_not_hcenter:
+	
+	textRenderer_drawText_halign_done:
 	
 	
 	;prepare the texture and vertex array
@@ -388,7 +420,7 @@ textRenderer_drawText:
 		movss xmm0, dword[ebp-8]
 		movss xmm1, dword[font_size_x]
 		addss xmm0, xmm1
-		movss xmm1, dword[ONE]
+		movss xmm1, dword[spacing]
 		addss xmm0, xmm1
 		movss dword[ebp-8], xmm0
 	
@@ -448,4 +480,38 @@ textRenderer_setFontSize:
 	
 	mov esp, ebp
 	pop ebp
+	ret
+	
+	
+textRenderer_setSpacing:
+	fild dword[esp+4]
+	fstp dword[spacing]
+	ret
+	
+	
+	
+textRenderer_getTextWidth:
+	mov eax, dword[esp+4]
+	push eax
+	call my_strlen
+	mov dword[esp], eax
+	fild dword[esp]
+	fstp dword[esp]
+	movss xmm0, dword[esp]
+	movss xmm1, dword[font_size_x]
+	movss xmm2, dword[spacing]
+	addss xmm1, xmm2
+	mulss xmm0, xmm1
+	subss xmm0, xmm2		;xmm0=length*(char_width+spacing)-spacing
+	add esp, 4
+	ret
+	
+	
+textRenderer_getTextHeight:
+	xor eax, eax
+	mov ecx, dword[esp+4]
+	cmp byte[ecx], 0
+	je textRenderer_getTextHeight_empty
+		mov eax, dword[font_size_y_int]
+	textRenderer_getTextHeight_empty:
 	ret

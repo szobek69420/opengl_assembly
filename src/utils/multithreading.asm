@@ -46,6 +46,9 @@ section .text use32
 	;returns 0 if there were no problems
 	global thread_suspend			;int thread_suspend(Thread* thread)
 	
+	;suspends the execution for the given time on the current thread
+	global thread_sleep				;void thread_sleep(int milliseconds)
+	
 	
 	;returns 0 if there WAS an error
 	global mutex_create				;Mutex* mutex_create()
@@ -83,6 +86,7 @@ section .text use32
 	dll_import kernel32.dll, SuspendThread
 	dll_import kernel32.dll, CloseHandle
 	dll_import kernel32.dll, WaitForSingleObject
+	dll_import kernel32.dll, Sleep
 	
 	dll_import kernel32.dll, CreateMutexA
 	dll_import kernel32.dll, ReleaseMutex
@@ -236,6 +240,18 @@ thread_suspend:
 	xor eax, eax
 	
 	thread_suspend_end:
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+thread_sleep:
+	push ebp
+	mov ebp, esp
+	
+	push dword[ebp+8]
+	call [Sleep]
+	
 	mov esp, ebp
 	pop ebp
 	ret

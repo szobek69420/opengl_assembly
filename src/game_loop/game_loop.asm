@@ -12,7 +12,7 @@ section .rodata use32
 	P15 dd 0.15
 	P6 dd 0.6
 	
-	test_text db "HOLODO MORBIUS",0
+	test_text db "OTTO VON BISMARCK",0
 	print_int db "%d",10,0
 	print_two_ints db "%d %d",10,0
 	print_float db "%f",0
@@ -26,8 +26,6 @@ section .bss use32
 	
 	pplayer resb 4
 	
-	helper resb 4
-	
 	hyperPlane resb 64
 	hyperCube resb 104
 	hyperCube_vertices resb 16
@@ -38,6 +36,8 @@ section .data use32
 	last_frame_milliseconds dd 0		;int, the GetTickCount of the last frame
 	delta_time_milliseconds dd 0		;int
 	delta_time_seconds dd 0.0			;float
+	
+	current_window dd 0					;GLFWwindow*
 
 section .text use32
 
@@ -50,6 +50,7 @@ section .text use32
 	extern glClearColor
 	extern glEnable
 	extern glFrontFace
+	extern glViewport
 	
 	extern GL_DEPTH_TEST
 	extern GL_COLOR_BUFFER_BIT
@@ -73,6 +74,7 @@ section .text use32
 	extern glfwSetCursorPosCallback
 	extern glfwSetScrollCallback
 	extern glfwSetInputMode
+	extern glfwSetFramebufferSizeCallback
 	extern GLFW_CURSOR
 	extern GLFW_CURSOR_DISABLED
 	extern GLFW_KEY_ESCAPE
@@ -115,44 +117,52 @@ section .text use32
 	extern textRenderer_drawText
 	extern TEXT_ALIGN_BOTTOM_LEFT
 	
+	extern WINDOW_SIZE_X
+	extern WINDOW_SIZE_Y
+	
 game_loop:
 	push ebp
 	mov ebp, esp
 	
-	sub esp, 4			;pwindow
 	
 	;save pwindow
 	mov eax, dword[ebp+8]
-	mov dword[ebp-4], eax
+	mov dword[current_window], eax
 	
 	;init input and set callbacks
 	call input_init
-	mov dword[helper], esp
+	
 	
 	push input_keyCallback
-	push dword[ebp-4]
+	push dword[current_window]
 	call [glfwSetKeyCallback]
 	add esp, 8
 	
 	push input_mouseButtonCallback
-	push dword[ebp-4]
+	push dword[current_window]
 	call [glfwSetMouseButtonCallback]
 	add esp, 8
 	
 	push input_mouseMoveCallback
-	push dword[ebp-4]
+	push dword[current_window]
 	call [glfwSetCursorPosCallback]
 	add esp, 8
 	
 	push input_mouseScrollCallback
-	push dword[ebp-4]
+	push dword[current_window]
 	call [glfwSetScrollCallback]
+	add esp, 8
+	
+	;set window resize callback
+	push gameLoop_handleWindowResize
+	push dword[current_window]
+	call [glfwSetFramebufferSizeCallback]
 	add esp, 8
 	
 	;hide cursor
 	push dword[GLFW_CURSOR_DISABLED]
 	push dword[GLFW_CURSOR]
-	push dword[ebp-4]
+	push dword[current_window]
 	call [glfwSetInputMode]
 	add esp, 12
 	
@@ -167,10 +177,6 @@ game_loop:
 	
 	;init text renderer
 	call textRenderer_init
-	push 1000
-	push 1000
-	call textRenderer_setScreenSize
-	add esp, 8
 	
 	;create player
 	push camera
@@ -197,33 +203,6 @@ game_loop:
 	add esp, 8
 	
 	mov dword[hyperCube_renderable], 0
-	
-	
-	push esi		;save esi
-	push edi		;save edi
-	mov esi, dword[hyperCube_vertices]
-	mov edi, hyperCube_vertices
-	mov edi, dword[edi+12]
-	sugus2:
-		push edi
-		;call vec3_print
-		add esp, 4
-		
-		lea eax, [edi+12]
-		push eax
-		;call vec3_print
-		add esp, 4
-		
-		push print_new_line
-		;call my_printf
-		add esp, 4
-		
-		add edi, 24
-		sub esi, 6
-		test esi, esi
-		jnz sugus2
-	pop edi			;restore edi
-	pop esi			;restore esi
 	
 	
 	;enable depth test and face cull
@@ -269,7 +248,7 @@ game_loop:
 		call hyperCube_update
 		add esp, 8
 		
-		call game_loop_update_hyperCube_renderable
+		call gameLoop_update_hyperCube_renderable
 	
 	
 		;set clear color
@@ -308,7 +287,7 @@ game_loop:
 		add esp, 16
 		
 		;swap buffers
-		push dword[ebp-4]
+		push dword[current_window]
 		call [glfwSwapBuffers]
 		add esp, 4
 		
@@ -323,13 +302,13 @@ game_loop:
 		test eax, eax
 		jz game_loop_loop_no_escape
 			push 69
-			push dword[ebp-4]
+			push dword[current_window]
 			call [glfwSetWindowShouldClose]
 			add esp, 8
 		game_loop_loop_no_escape:
 		
 		;check if the window is closed or not
-		push dword[ebp-4]
+		push dword[current_window]
 		call [glfwWindowShouldClose]
 		add esp, 4
 		test eax, eax
@@ -359,12 +338,15 @@ game_loop:
 	;deinit renderable
 	call renderable_deinit
 	
+	
+	mov dword[current_window], 0
+	
 	mov esp, ebp
 	pop ebp
 	ret
 	
 	
-game_loop_update_hyperCube_renderable:
+gameLoop_update_hyperCube_renderable:
 	push ebp
 	mov ebp, esp
 	
@@ -399,6 +381,58 @@ game_loop_update_hyperCube_renderable:
 	mov dword[hyperCube_renderable], eax
 	add esp, 12
 	
+	mov esp, ebp
+	pop ebp
+	ret
+	
+	
+	
+;void gameLoop_handleWindowResize(GLFWwindow* pwindow, int width, int height)
+gameLoop_handleWindowResize:
+	push ebp
+	mov ebp, esp
+	
+	mov eax, dword[ebp+8]
+	cmp eax, dword[current_window]
+	jne gameLoop_handleWindowResize_end
+	
+	mov eax, dword[ebp+12]
+	mov dword[WINDOW_SIZE_X], eax
+	mov eax, dword[ebp+16]
+	mov dword[WINDOW_SIZE_Y], eax
+	
+	;tell it to the text renderer
+	push dword[WINDOW_SIZE_Y]
+	push dword[WINDOW_SIZE_X]
+	call textRenderer_setScreenSize
+	add esp, 8
+	
+	;change the camera's aspect ratio
+	cmp dword[WINDOW_SIZE_Y], 0
+	je gameLoop_handleWindowResize_y_zero
+		fild dword[WINDOW_SIZE_X]
+		fild dword[WINDOW_SIZE_Y]
+		fdivp
+		mov eax, camera
+		fstp dword[eax+32]
+		jmp gameLoop_handleWindowResize_cum_aspect_done
+	gameLoop_handleWindowResize_y_zero:
+		mov eax, camera
+		mov dword[eax+32], 0
+	gameLoop_handleWindowResize_cum_aspect_done:
+	
+	;change viewport
+	push dword[WINDOW_SIZE_Y]
+	push dword[WINDOW_SIZE_X]
+	push 0
+	push 0
+	call [glViewport]
+	
+	
+	push test_text
+	call my_printf
+	
+	gameLoop_handleWindowResize_end:
 	mov esp, ebp
 	pop ebp
 	ret

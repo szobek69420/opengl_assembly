@@ -9,6 +9,12 @@ section .rodata use32
 	window_could_not_be_created db "window: window could not be created",10,0
 	print_int db "%d",10,0
 
+section .data use32
+	WINDOW_SIZE_X dd 1000
+	WINDOW_SIZE_Y dd 1000
+	
+	global WINDOW_SIZE_X
+	global WINDOW_SIZE_Y
 
 section .text use32
 	global window_create			;GLFWwindow* window_create(const char* name)
@@ -69,8 +75,8 @@ window_create:
 	push 0
 	push 0
 	push dword[ebp+8]
-	push 1000
-	push 1000
+	push dword[WINDOW_SIZE_Y]
+	push dword[WINDOW_SIZE_X]
 	call [glfwCreateWindow]
 	mov dword[ebp-4], eax
 	cmp eax, 0

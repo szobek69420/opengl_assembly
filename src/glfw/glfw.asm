@@ -319,6 +319,7 @@ section .text use32
 	dll_import glfw3.dll, glfwPollEvents
 	dll_import glfw3.dll, glfwSetCursorPos
 	dll_import glfw3.dll, glfwSetCursorPosCallback
+	dll_import glfw3.dll, glfwSetFramebufferSizeCallback
 	dll_import glfw3.dll, glfwSetInputMode
 	dll_import glfw3.dll, glfwSetKeyCallback
 	dll_import glfw3.dll, glfwSetMouseButtonCallback
