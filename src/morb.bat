@@ -9,6 +9,8 @@ nasm -fobj glfw/glfw.asm -o build/glfw.o
 nasm -fobj opengl/opengl.asm -o build/opengl.o
 nasm -fobj shader/shader.asm -o build/shader.o
 nasm -fobj kuba/kuba.asm -o build/kuba.o
+nasm -fobj utils/thread_safe_queue.asm -o build/thread_safe_queue.o
+nasm -fobj utils/multithreading.asm -o build/multithreading.o
 nasm -fobj utils/queue.asm -o build/queue.o
 nasm -fobj utils/vector.asm -o build/vector.o
 nasm -fobj utils/string.asm -o build/string.o
@@ -46,6 +48,8 @@ build/mat4.o ^
 build/mat3.o ^
 build/vec4.o ^
 build/vec3.o ^
+build/thread_safe_queue.o ^
+build/multithreading.o ^
 build/queue.o ^
 build/vector.o ^
 build/string.o ^

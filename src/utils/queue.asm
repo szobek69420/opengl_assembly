@@ -37,7 +37,7 @@ section .text use32
 	
 	global queue_clear			;void queue_clear(queue* pqueue)
 	
-	global queue_printInfo		;void queue_printInfo
+	global queue_printInfo		;void queue_printInfo(queue* pqueue)
 	
 	
 	extern my_malloc
